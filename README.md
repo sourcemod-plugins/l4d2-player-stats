@@ -1,6 +1,6 @@
 ### **Simple Player Statistics Plugin for Left 4 Dead 2**
 
-#### Features
+### Features
 
 - This plugin tracks and records player statistics from human players. The following statistics are currently being recorded:
 
@@ -21,13 +21,13 @@
 
 - A point system is also implemented and can be customized by modifying the point multipliers from the plugin configuration file (`playerstats.cfg`)
 
-#### Installation
+### Installation
 
 Download the [latest](https://github.com/sourcemod-plugins/l4d2-player-stats/archive/master.zip) version from the repository and extract the contents of **l4d2-player-stats-master/** to the root directory of the left 4 dead 2 server installation. 
 
-#### Configuration
+### Configuration
 
-##### Database Configuration
+#### Database Configuration
 
 1. Create and setup the appropriate users/credentials/priviledges on your MySQL/MariaDB database system.
 
@@ -50,7 +50,7 @@ Download the [latest](https://github.com/sourcemod-plugins/l4d2-player-stats/arc
    }
    ```
 
-##### Plugin Configuration
+#### Plugin Configuration
 
 The plugin can be further customized through the `playerstats.cfg` file located under `addons/sourcemod/configs/`. The default entries will look like this:
 
@@ -74,17 +74,17 @@ The plugin can be further customized through the `playerstats.cfg` file located 
 }
 ```
 
-<u>Configuration Sections</u>
+##### <u>Configuration Sections</u>
 
-| Section Name    | Description                                                  |      |
-| --------------- | ------------------------------------------------------------ | ---- |
-| StatModifiers   | This section contains the point modifiers for the point system. These values affects the total points of the user. For example, if a player has killed 10 special infected by headshot (infected_headshot) and the point modifier is 2.5 the total points for the number of infected headshots would be 25. |      |
-| PlayerRankPanel | This section configures the display panel  of the player statistics/ranking. Currently you will only be able to customize the title of the panel. |      |
-| ConnectAnnounce | This section configures the format of the player connect announce. The formatting rules are explained below. |      |
+| Section Name    | Description                                                  |
+| --------------- | ------------------------------------------------------------ |
+| StatModifiers   | This section contains the point modifiers for the point system. These values affects the total points of the user. For example, if a player has killed 10 special infected by headshot (infected_headshot) and the point modifier is 2.5 the total points for the number of infected headshots would be 25. |
+| PlayerRankPanel | This section configures the display panel  of the player statistics/ranking. Currently you will only be able to customize the title of the panel. |
+| ConnectAnnounce | This section configures the format of the player connect announce. The formatting rules are explained below. |
 
-##### Connect Announce Formatting Rules
+#### Connect Announce Formatting Rules
 
-<u>Color Tags</u>
+##### <u>Color Tags</u>
 
 | Tag   | Color                                  |
 | ----- | -------------------------------------- |
@@ -101,7 +101,7 @@ The plugin can be further customized through the `playerstats.cfg` file located 
 | {OG}  | Olive                                  |
 | {BLA} | Black                                  |
 
-<u>Special Tags</u>
+##### <u>Special Tags</u>
 
 Some tags are prefixed with "d", "i" or "f". These prefixes are necessary to identify the type of the data so the plugin will be able to interpret it correctly when read from the database. 
 
