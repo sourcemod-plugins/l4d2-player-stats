@@ -27,11 +27,15 @@
 #define PLUGIN_AUTHOR "mac & cheese (a.k.a thresh0ld)"
 #define PLUGIN_VERSION "1.0.0-alpha"
 
+#define TEAM_SPECTATOR          1
+#define TEAM_SURVIVOR           2
+#define TEAM_INFECTED           3
+
 #define IS_VALID_CLIENT(%1)     (%1 > 0 && %1 <= MaxClients)
 #define IS_VALID_HUMAN(%1)		(IS_VALID_CLIENT(%1) && IsClientConnected(%1) && !IsFakeClient(%1))
-#define IS_SPECTATOR(%1)        (GetClientTeam(%1) == 1)
-#define IS_SURVIVOR(%1)         (GetClientTeam(%1) == 2)
-#define IS_INFECTED(%1)         (GetClientTeam(%1) == 3)
+#define IS_SPECTATOR(%1)        (GetClientTeam(%1) == TEAM_SPECTATOR)
+#define IS_SURVIVOR(%1)         (GetClientTeam(%1) == TEAM_SURVIVOR)
+#define IS_INFECTED(%1)         (GetClientTeam(%1) == TEAM_INFECTED)
 #define IS_VALID_INGAME(%1)     (IS_VALID_CLIENT(%1) && IsClientInGame(%1))
 #define IS_VALID_SURVIVOR(%1)   (IS_VALID_INGAME(%1) && IS_SURVIVOR(%1))
 #define IS_VALID_INFECTED(%1)   (IS_VALID_INGAME(%1) && IS_INFECTED(%1))
@@ -40,23 +44,8 @@
 #define IS_INFECTED_ALIVE(%1)   (IS_VALID_INFECTED(%1) && IsPlayerAlive(%1))
 #define MAX_CLIENTS MaxClients
 
-#define TEAM_SPECTATOR          1
-#define TEAM_SURVIVOR           2
-#define TEAM_INFECTED           3
-
-#define ZC_SMOKER               1
-#define ZC_BOOMER               2
-#define ZC_HUNTER               3
-#define ZC_SPITTER              4
-#define ZC_JOCKEY               5
-#define ZC_CHARGER              6
-#define ZC_WITCH                7
-#define ZC_TANK                 8
-#define ZC_NOTINFECTED          9
-#define ZC_TOTAL                7
-
 #define CONFIG_FILE "playerstats.cfg"
-#define DB_CONFIG_NAME "babystats"
+#define DB_CONFIG_NAME "playerstats"
 
 #define STATS_STEAM_ID "steam_id"
 #define STATS_LAST_KNOWN_ALIAS "last_known_alias"
@@ -99,7 +88,7 @@ public Plugin myinfo =
 	author = PLUGIN_AUTHOR, 
 	description = "Tracks kills, deaths and other special skills", 
 	version = PLUGIN_VERSION, 
-	url = "https://github.com/ribasco/l4d2playerstats"
+	url = "https://github.com/sourcemod-plugins/l4d2-player-stats"
 };
 
 /**
@@ -1440,6 +1429,9 @@ public void Error(const char[] format, any...)
 	}
 }
 
+/**
+*
+*/
 public void Info(const char[] format, any...)
 {
 	int len = strlen(format) + 255;
@@ -1460,6 +1452,9 @@ public void Info(const char[] format, any...)
 	}
 }
 
+/**
+* Used for printing debug information to the server and client console. This does not display messages when debug mode is disabled.
+*/
 public void Debug(const char[] format, any...)
 {
 	if (g_bDebug == null || g_bDebug.IntValue <= 0) {
