@@ -138,10 +138,10 @@ public void OnPluginStart()
 		return;
 	}
 	
-	RegConsoleCmd("sm_rank", Command_ShowRank);
-	RegConsoleCmd("sm_top", Command_ShowTopPlayers);
-	RegConsoleCmd("sm_topig", Command_ShowTopPlayersInGame);
-	RegAdminCmd("sm_pstats_reload", Command_ReloadConfig, ADMFLAG_ROOT, "Reload plugin configuration");
+	RegConsoleCmd("sm_rank", Command_ShowRank, "Display the current stats & ranking of the requesting player. A panel will be displayed to the player.");
+	RegConsoleCmd("sm_top", Command_ShowTopPlayers, "Display the top N players. A menu panel will be displayed to the requesting player");
+	RegConsoleCmd("sm_topig", Command_ShowTopPlayersInGame, "Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player.");
+	RegAdminCmd("sm_pstats_reload", Command_ReloadConfig, ADMFLAG_ROOT, "Reloads plugin configuration. This is useful if you have modified the playerstats.cfg file. 'This command also synchronizes the modifier values set from the configuration file to the database.");
 	
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
 	HookEvent("player_incapacitated", Event_PlayerIncapped, EventHookMode_Post);
