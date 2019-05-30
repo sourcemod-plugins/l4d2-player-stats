@@ -123,11 +123,11 @@ Some tags are prefixed with "d", "i" or "f". These prefixes are necessary to ide
 
 Tag Prefix
 
-| Prefix | Type                          |
-| ------ | ----------------------------- |
-| i      | Integer Number                |
-| d      | Date/Time                     |
-| f      | Decimal/Floating Point Number |
+| Prefix | Type                                 |
+| ------ | ------------------------------------ |
+| i      | Integer Number                       |
+| d      | Date/Time (Not yet working properly) |
+| f      | Decimal/Floating Point Number        |
 
 | Tag                   | Description                                         |
 | --------------------- | --------------------------------------------------- |
@@ -158,10 +158,12 @@ Tag Prefix
 
 ### Commands
 
+>  **Note**: These commands can also be invoked from chat (e.g. `!rank`, `!top 10`, `!ranks`, `!pstats_reload`)
+
 | Name             | Description                                                  | Parameters | Parameter Description                  |
 | ---------------- | ------------------------------------------------------------ | ---------- | -------------------------------------- |
 | sm_rank          | Display the current stats & ranking of the requesting player. A panel will be displayed to the player. | None       | None                                   |
 | sm_top           | Display the top N players. A menu panel will be displayed to the requesting player | Number     | The number of players to be displayed. |
 | sm_ranks         | Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player. | Number     | The number of players to be displayed. |
-| sm_pstats_reload | Reloads plugin configuration. This is useful if you have modified the playerstats.cfg file. 'This command also synchronizes the modifier values set from the configuration file to the database. | None       | None                                   |
+| sm_pstats_reload | Reloads plugin configuration. This is useful if you have modified the `playerstats.cfg` file. 'This command also synchronizes the modifier values set from the configuration file to the database. This is quite an expensive operation, so please only use this command when necessary. | None       | None                                   |
 
