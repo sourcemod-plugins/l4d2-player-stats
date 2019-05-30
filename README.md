@@ -1,5 +1,7 @@
 ### **Simple Player Statistics Plugin for Left 4 Dead 2**
 
+[TOC]
+
 ### Features
 
 - This plugin tracks and records player statistics from human players. The following statistics are currently being recorded:
@@ -98,9 +100,9 @@ Connect Announce Output:
 | PlayerRankPanel | This section configures the display panel  of the player statistics/ranking. Currently you will only be able to customize the title of the panel. |
 | ConnectAnnounce | This section configures the format of the player connect announce. The formatting rules are explained below. |
 
-#### Connect Announce Formatting Rules
+###### Connect Announce Formatting Rules
 
-##### <u>Color Tags</u>
+**<u>Colour Tags</u>**
 
 | Tag   | Color                                  |
 | ----- | -------------------------------------- |
@@ -117,17 +119,17 @@ Connect Announce Output:
 | {OG}  | Olive                                  |
 | {BLA} | Black                                  |
 
-##### <u>Special Tags</u>
+**<u>Special Tags</u>**
 
 Some tags are prefixed with "d", "i" or "f". These prefixes are necessary to identify the type of the data so the plugin will be able to interpret it correctly when read from the database. 
 
+Tag Prefix
+
 | Prefix | Type                          |
 | ------ | ----------------------------- |
-| i      | Number                        |
+| i      | Integer Number                |
 | d      | Date/Time                     |
 | f      | Decimal/Floating Point Number |
-
-
 
 | Tag                   | Description                                         |
 | --------------------- | --------------------------------------------------- |
@@ -143,7 +145,9 @@ Some tags are prefixed with "d", "i" or "f". These prefixes are necessary to ide
 
 
 
-#### ConVars
+------
+
+### ConVars
 
 | Name                    | Description                                                  | Default value | Min Value | Max Value |
 | ----------------------- | ------------------------------------------------------------ | :------------ | --------- | --------- |
@@ -154,9 +158,7 @@ Some tags are prefixed with "d", "i" or "f". These prefixes are necessary to ide
 | pstats_menu_timeout     | The timeout value for the player stats panel                 | 30 (seconds)  | 3         | 9999      |
 | pstats_max_top_players  | The max top N players to display                             | 10            | 10        | 50        |
 
-
-
-#### Commands
+### Commands
 
 | Name             | Description                                                  | Parameters | Parameter Description                  |
 | ---------------- | ------------------------------------------------------------ | ---------- | -------------------------------------- |
