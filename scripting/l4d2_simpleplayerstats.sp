@@ -47,17 +47,20 @@
 #define CONFIG_FILE "playerstats.cfg"
 #define DB_CONFIG_NAME "playerstats"
 
+//Player general information
 #define STATS_STEAM_ID "steam_id"
 #define STATS_LAST_KNOWN_ALIAS "last_known_alias"
 #define STATS_LAST_JOIN_DATE "last_join_date"
+#define STATS_RANK "rank_num"
+#define STATS_CREATE_DATE "create_date"
+#define STATS_TOTAL_POINTS "total_points"
+
+//Player in-game statistics
 #define STATS_SURVIVOR_KILLED "survivor_killed"
 #define STATS_SURVIVOR_INCAPPED "survivor_incapped"
 #define STATS_INFECTED_KILLED "infected_killed"
 #define STATS_INFECTED_HEADSHOT "infected_headshot"
-#define STATS_WITCH_CROWNS "witch_crowns"
-#define STATS_TOTAL_POINTS "total_points"
-#define STATS_RANK "rank_num"
-#define STATS_CREATE_DATE "create_date"
+
 
 #define DEFAULT_CONFIG_PANEL_TITLE "Player Stats"
 #define DEFAULT_CONFIG_ANNOUNCE_FORMAT "{N}Player '{G}{last_known_alias}{N}' ({B}{steam_id}{N}) has joined the game ({G}Rank:{N} {i:rank_num}, {G}Points:{N} {f:total_points})"
@@ -130,7 +133,7 @@ public void OnPluginStart()
 	
 	RegConsoleCmd("sm_rank", Command_ShowRank, "Display the current stats & ranking of the requesting player. A panel will be displayed to the player.");
 	RegConsoleCmd("sm_top", Command_ShowTopPlayers, "Display the top N players. A menu panel will be displayed to the requesting player");
-	RegConsoleCmd("sm_topig", Command_ShowTopPlayersInGame, "Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player.");
+	RegConsoleCmd("sm_ranks", Command_ShowTopPlayersInGame, "Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player.");
 	RegAdminCmd("sm_pstats_reload", Command_ReloadConfig, ADMFLAG_ROOT, "Reloads plugin configuration. This is useful if you have modified the playerstats.cfg file. 'This command also synchronizes the modifier values set from the configuration file to the database.");
 	
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
@@ -146,6 +149,13 @@ public void OnPluginStart()
 	HookEvent("bot_player_replace", Event_PlayerReplaceBot, EventHookMode_Post);
 }
 
+/**
+* Checks if the plugin should collect/record statistics.
+*
+* This will return false if:
+* - Cvar 'pstats_enabled' is 0
+* - Cvar 'pstats_versus_exclusive' is 1 and game mode is not versus
+*/
 public bool AllowCollectStats() {
 	//Check if plugin is enabled
 	if (PluginDisabled()) {
@@ -157,7 +167,7 @@ public bool AllowCollectStats() {
 	g_sGameMode.GetString(gameMode, sizeof(gameMode));
 	
 	//If its not exclusive to versus, then just return true
-	if (g_bVersusExclusive.IntValue <= 0)
+	if (!VersusExclusive())
 		return true;
 	
 	if (!StrEqual(gameMode, "versus")) {
@@ -167,10 +177,23 @@ public bool AllowCollectStats() {
 	return true;
 }
 
+/**
+* Checks if the plugin should record stats on versus mode only
+*/
+public bool VersusExclusive() {
+	return g_bVersusExclusive.IntValue > 0;
+}
+
+/**
+* Check if the plugin is in disabled state.
+*/
 public bool PluginDisabled() {
 	return g_bEnabled.IntValue <= 0;
 }
 
+/**
+* Callback for sm_pstats_reload command
+*/
 public Action Command_ReloadConfig(int client, int args) {
 	if (PluginDisabled()) {
 		PrintToChat(client, "Cannot execute command. Player stats is currently disabled.");
@@ -192,6 +215,9 @@ public Action Command_ReloadConfig(int client, int args) {
 	return Plugin_Handled;
 }
 
+/**
+* Load/Reload the plugin configuration file
+*/
 public bool LoadConfigData() {
 	KeyValues kv = new KeyValues("PlayerStats");
 	
@@ -274,6 +300,9 @@ public bool LoadConfigData() {
 	return true;
 }
 
+/**
+* Synchronizes (Insert or Update) the statistic key/value into the STATS_SKILLS database table
+*/
 public void SyncStatModifiers(const char[] key, float value) {
 	if (StringBlank(key)) {
 		Debug("No key specified. Skipping sync");
@@ -298,6 +327,9 @@ public void SyncStatModifiers(const char[] key, float value) {
 	g_hDatabase.Query(TQ_SyncStatModifiers, query, pack);
 }
 
+/**
+* SQL Callback for SyncStatModifiers
+*/
 public void TQ_SyncStatModifiers(Database db, DBResultSet results, const char[] error, any data) {
 	if (results == null) {
 		LogError("TQ_SyncStatModifiers :: Query failed (Reason: %s)", error);
@@ -369,7 +401,7 @@ public Action Event_PlayerDisconnect(Event event, const char[] name, bool dontBr
 }
 
 public Action Event_MapTransition(Event event, const char[] name, bool dontBroadcast) {
-	Debug("EVENT_MAP_TRANSITION");
+	Debug("================================= MAP TRANSITION =================================");
 }
 
 /**
@@ -509,8 +541,138 @@ public Action Command_ShowTopPlayersInGame(int client, int args) {
 		PrintToChat(client, "Cannot execute command. Player stats is currently disabled.");
 		return Plugin_Handled;
 	}
-	//TODO
+	ShowInGamePlayerRanks(client);
 	return Plugin_Handled;
+}
+
+/**
+* Display a panel showing the statistics and rank of the players in-game
+*
+* @param client The requesting client index
+*/
+public void ShowInGamePlayerRanks(int client) {
+	if (!IS_VALID_CLIENT(client) || IsFakeClient(client)) {
+		Debug("ShowInGamePlayerRanks :: Skipping show stats. Not a valid client (%i)", client);
+		return;
+	}
+	
+	char steamId[128];
+	GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId));
+		
+	char steamIds[256];
+	int count = GetInGamePlayerSteamIds(steamIds, sizeof(steamIds));
+	
+	if (count == 0) {
+		Debug("ShowInGamePlayerRanks :: No players available to query");
+		return;
+	}
+	
+	Debug("Steam Ids = %s", steamIds);
+	
+	char query[512];
+	FormatEx(query, sizeof(query), "select * from STATS_VW_PLAYER_RANKS s WHERE s.steam_id IN (%s) LIMIT 8", steamIds);
+	
+	Debug("ShowInGamePlayerRanks :: Executing query: %s", query);
+	
+	DataPack pack = new DataPack();
+	pack.WriteCell(client);
+	pack.WriteCell(count);
+	g_hDatabase.Query(TQ_ShowInGamePlayerRanks, query, pack);
+}
+
+/**
+* SQL Callback for 'ShowInGamePlayerRanks' Command
+*/
+public void TQ_ShowInGamePlayerRanks(Database db, DBResultSet results, const char[] error, any data) {
+	DataPack pack = data;
+	StringMap map = new StringMap();
+	
+	pack.Reset();
+	int clientId = pack.ReadCell();
+	//int playerCount = pack.ReadCell();
+		
+	char msg[255];
+	Menu menu = new Menu(TopInGameRanksMenuHandler);
+	menu.ExitButton = true;
+	menu.SetTitle("Player Ranks (In-Game)");
+	
+	while (ExtractPlayerStats(results, map)) {
+		char steamId[128];
+		char lastKnownAlias[255];
+		int rankNum;
+		
+		map.GetString(STATS_STEAM_ID, steamId, sizeof(steamId));
+		map.GetString(STATS_LAST_KNOWN_ALIAS, lastKnownAlias, sizeof(lastKnownAlias));
+		map.GetValue(STATS_RANK, rankNum);
+		
+		Debug("> Player: %s", lastKnownAlias);
+		Format(msg, sizeof(msg), "%s (Rank %d)", lastKnownAlias, rankNum);
+		menu.AddItem(steamId, msg);
+		
+		delete map;
+		map = new StringMap();
+	}
+	
+	menu.Display(clientId, g_iStatsMenuTimeout.IntValue);
+	
+	delete pack;
+	delete map;
+}
+
+public int TopInGameRanksMenuHandler(Menu menu, MenuAction action, int clientId, int idIndex) {
+	/* If an option was selected, tell the client about the item. */
+	if (action == MenuAction_Select)
+	{
+		char steamId[64];
+		bool found = menu.GetItem(idIndex, steamId, sizeof(steamId));
+		
+		if (found) {
+			ShowPlayerRankPanel(clientId, steamId);
+		}
+	}
+	/* If the menu was cancelled, print a message to the server about it. */
+	else if (action == MenuAction_Cancel)
+	{
+		Debug("Client %N's menu was cancelled.  Reason: %d", clientId, idIndex);
+	}
+	/* If the menu has ended, destroy it */
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+}
+
+/**
+* Builds a comma delimited string of steam ids of each player who is currently in-game and associated with a team (survivor or infected). 
+* Spectators or players with invalid steam id are ignored. Note: The buffer should be big enough to contain 8 steam id strings (at least 256).
+*/
+public int GetInGamePlayerSteamIds(char[] buffer, int size) {
+	if (size < 171) {
+		Error("GetInGamePlayerSteamIds :: Buffer size is too small (%i). Should be > 170", size);
+		return 0;
+	}
+	int count = 0;
+	char steamId[128];
+	char tmp[128];
+	
+	int humanCount = GetHumanPlayerCount();
+	
+	for (int i = 1; i <= MAX_CLIENTS; i++) {
+		if (IS_VALID_HUMAN(i) && (IS_VALID_SURVIVOR(i) || IS_VALID_INFECTED(i))) {
+			//yeah, do not ignore retvals
+			if (GetClientAuthId(i, AuthId_Steam2, steamId, sizeof(steamId))) {
+				if ((count + 1) >= humanCount) {
+					FormatEx(tmp, sizeof(tmp), "'%s'", steamId);
+				} else {
+					FormatEx(tmp, sizeof(tmp), "'%s',", steamId);
+				}	
+				Debug("GetInGamePlayerSteamIds :: Adding: %s", tmp);
+				StrCat(buffer, size, tmp);
+				count++;
+			}
+		}
+	}
+	return count;
 }
 
 /**
@@ -544,28 +706,6 @@ public Action Command_ShowTopPlayers(int client, int args) {
 	Debug("Displaying top %i players", maxPlayers);
 	ShowTopPlayersRankPanel(client, maxPlayers);
 	
-	return Plugin_Handled;
-}
-
-/**
-* Callback method for the command show rank
-*/
-public Action Command_ShowRank(int client, int args) {
-	if (PluginDisabled()) {
-		PrintToChat(client, "Cannot execute command. Player stats is currently disabled.");
-		return Plugin_Handled;
-	}
-	
-	if (!IS_VALID_HUMAN(client)) {
-		Error("Client '%N' is not valid. Skipping show rank", client);
-		return Plugin_Handled;
-	}
-	
-	char steamId[128];
-	if (!GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId))) {
-		Error("Unable to retrieve a valid steam id from client %N", client);
-	}
-	ShowPlayerRankPanel(client, steamId);
 	return Plugin_Handled;
 }
 
@@ -670,6 +810,28 @@ public int TopPlayerStatsMenuHandler(Menu menu, MenuAction action, int clientId,
 }
 
 /**
+* Callback method for the command show rank
+*/
+public Action Command_ShowRank(int client, int args) {
+	if (PluginDisabled()) {
+		PrintToChat(client, "Cannot execute command. Player stats is currently disabled.");
+		return Plugin_Handled;
+	}
+	
+	if (!IS_VALID_HUMAN(client)) {
+		Error("Client '%N' is not valid. Skipping show rank", client);
+		return Plugin_Handled;
+	}
+	
+	char steamId[128];
+	if (!GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId))) {
+		Error("Unable to retrieve a valid steam id from client %N", client);
+	}
+	ShowPlayerRankPanel(client, steamId);
+	return Plugin_Handled;
+}
+
+/**
 * Method to display the rank/stats panel to the player
 */
 public void ShowPlayerRankPanel(int client, const char[] steamId) {
@@ -706,7 +868,7 @@ public void ShowPlayerRankPanel(int client, const char[] steamId) {
 }
 
 /**
-* SQL Callback for Player Rank/Stats Panel 
+* SQL Callback for Player Rank/Stats Panel.
 */
 public void TQ_ShowPlayerRankPanel(Database db, DBResultSet results, const char[] error, any data) {
 	/* Make sure the client didn't disconnect while the thread was running */
@@ -717,8 +879,7 @@ public void TQ_ShowPlayerRankPanel(Database db, DBResultSet results, const char[
 	}
 	
 	if (results == null) {
-		LogError("TQ_PlayerStatsMenu :: Query failed! %s", error);
-		Debug("TQ_PlayerStatsMenu :: Query failed! %s", error);
+		Error("TQ_PlayerStatsMenu :: Query failed (Reason: %s)", error);
 		g_bShowingRankPanel[data] = false;
 	} else if (results.RowCount > 0) {
 		StringMap map = new StringMap();
@@ -1152,6 +1313,8 @@ public void ParseStatsKeywords(const char[] text, char[] buffer, int size, Strin
 		keys.GetKey(i, keyName, bufferSize);
 		
 		int searchKeySize = bufferSize + 32;
+		
+		//There are probably simpler and more effective ways on doing this but i'm too lazy :)
 		
 		//Standard search key
 		char[] searchKey = new char[searchKeySize];

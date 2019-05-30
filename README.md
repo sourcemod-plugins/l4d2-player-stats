@@ -162,6 +162,6 @@ Tag Prefix
 | ---------------- | ------------------------------------------------------------ | ---------- | -------------------------------------- |
 | sm_rank          | Display the current stats & ranking of the requesting player. A panel will be displayed to the player. | None       | None                                   |
 | sm_top           | Display the top N players. A menu panel will be displayed to the requesting player | Number     | The number of players to be displayed. |
-| sm_topig         | Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player. | Number     | The number of players to be displayed. |
+| sm_ranks         | Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player. | Number     | The number of players to be displayed. |
 | sm_pstats_reload | Reloads plugin configuration. This is useful if you have modified the playerstats.cfg file. 'This command also synchronizes the modifier values set from the configuration file to the database. | None       | None                                   |
 
