@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `STATS_PLAYERS` (
   `infected_headshot` int(10) unsigned NOT NULL DEFAULT 0,
   `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`steam_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `STATS_SKILLS` (
   `name` varchar(50) NOT NULL,
