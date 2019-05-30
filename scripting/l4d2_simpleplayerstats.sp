@@ -117,6 +117,7 @@ public void OnPluginStart()
 	g_sGameMode = FindConVar("mp_gamemode");
 	
 	if (!InitDatabase()) {
+		Error("Could not connect to the database. Please check your database configuration file and make sure everything is configured correctly. (db section name: %s)", DB_CONFIG_NAME);
 		SetFailState("Could not connect to the database");
 	} else {
 		Info("Successfully connected to the database");
@@ -1239,13 +1240,7 @@ public Action Event_WitchKilled(Event event, const char[] name, bool dontBroadca
 	
 	char entityClassName[64];
 	Entity_GetClassName(witchId, entityClassName, sizeof(entityClassName));
-	
-	if (oneShot) {
-		PrintToChatAll("%N has crowned the witch. Fuck Yea!", attackerClientId);
-	} else {
-		PrintToChatAll("%N has killed the witch..Try crowning next time?", attackerClientId);
-	}
-	
+		
 	UpdateStat(attackerClientId, STATS_INFECTED_KILLED, 1);
 	
 	return Plugin_Continue;
