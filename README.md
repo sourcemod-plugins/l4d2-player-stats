@@ -4,22 +4,28 @@
 
 - This plugin tracks and records player statistics from human players. The following statistics are currently being recorded:
 
-  | Name               | Team     |
-  | ------------------ | -------- |
-  | Survivors Kils     | Infected |
-  | Survivors Incapped | Infected |
-  | Infected Kills     | Survivor |
-  | Infected Headshots | Survivor |
+  | Name                | Team     |
+  | ------------------- | -------- |
+  | Survivors Kils      | Infected |
+  | Survivors In capped | Infected |
+  | Infected Kills      | Survivor |
+  | Infected Headshots  | Survivor |
 
   
 
-- A customizable connect announce when a player joins displaying the current ranking/steam id/total points of the user. This feature also supports color coded messages. 
+- A customizable connect announce when a player joins displaying the current ranking/steam id/total points of the user. This feature also supports colour coded messages. 
+
+  ![Connect Announce](connect_announce.png)
 
 - A display panel showing the player statistics of a user. This can be triggered by issuing `sm_rank` on the console or by typing `!rank`in chat.
 
+  ![Player Rank](player_rank.png)
+
 - A display panel showing the top N players sorted by their ranking. This feature also allows the the requesting player to be able to view other player's statistics/ranking on the server.
 
-- A point system is also implemented and can be customized by modifying the point multipliers from the plugin configuration file (`playerstats.cfg`)
+  ![Top N Players](top_players.png)
+
+- A point system is also implemented and can be further customized by modifying the point multipliers from the plugin configuration file (`playerstats.cfg`)
 
 ### Installation
 
@@ -29,9 +35,9 @@ Download the [latest](https://github.com/sourcemod-plugins/l4d2-player-stats/arc
 
 #### Database Configuration
 
-1. Create and setup the appropriate users/credentials/priviledges on your MySQL/MariaDB database system.
+1. Create and setup the appropriate users/credentials/privileges on your MySQL/MariaDB database system.
 
-2. Import the provided SQL script (under `/configs/sql-init-scripts/mysql/playerstats.sql`\) into your MySQL/MariaDB system.
+2. Import the [provided SQL script](https://github.com/sourcemod-plugins/l4d2-player-stats/blob/master/configs/sql-init-scripts/mysql/playerstats.sql) (under `/configs/sql-init-scripts/mysql/playerstats.sql`\) into your MySQL/MariaDB system.
 
 3. Open `databases.cfg` file from `addons/sourcemod/configs` and add a new section named `playerstats`.
 
@@ -74,7 +80,17 @@ The plugin can be further customized through the `playerstats.cfg` file located 
 }
 ```
 
-##### <u>Configuration Sections</u>
+Connect Announce Output: 
+
+![Connect Announce Output](connect_announce.png)
+
+
+
+> Note: You can reload the configuration with the `sm_pstats_reload` command. Issuing this command will also synchronize the point modifiers on the STATS_MODIFIERS table.
+
+
+
+##### Configuration Sections</u>
 
 | Section Name    | Description                                                  |
 | --------------- | ------------------------------------------------------------ |
@@ -145,7 +161,7 @@ Some tags are prefixed with "d", "i" or "f". These prefixes are necessary to ide
 | Name             | Description                                                  | Parameters | Parameter Description                  |
 | ---------------- | ------------------------------------------------------------ | ---------- | -------------------------------------- |
 | sm_rank          | Display the current stats & ranking of the requesting player. A panel will be displayed to the player. | None       | None                                   |
-| sm_top           | Display the top N players. A menu panel will be displayed to the requesting player | <number>   | The number of players to be displayed. |
-| sm_topig         | Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player. | <number>   | The number of players to be displayed. |
+| sm_top           | Display the top N players. A menu panel will be displayed to the requesting player | Number     | The number of players to be displayed. |
+| sm_topig         | Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player. | Number     | The number of players to be displayed. |
 | sm_pstats_reload | Reloads plugin configuration. This is useful if you have modified the playerstats.cfg file. 'This command also synchronizes the modifier values set from the configuration file to the database. | None       | None                                   |
 
