@@ -108,11 +108,11 @@ public void OnPluginStart()
 	char defaultTopPlayerStr[32];
 	IntToString(DEFAULT_TOP_PLAYERS, defaultTopPlayerStr, sizeof(defaultTopPlayerStr));
 	
-	g_bEnabled = CreateConVar("pstats_enabled", "1", "Enable/Disable tracking");
-	g_bDebug = CreateConVar("pstats_debug_enabled", "0", "Enable debug messages");
-	g_bVersusExclusive = CreateConVar("pstats_versus_exclusive", "1", "If set, stats collection will be exclusive to versus mode only");
-	g_bRecordBots = CreateConVar("pstats_record_bots", "0", "Sets whether we should record bots");
-	g_iStatsMenuTimeout = CreateConVar("pstats_menu_timeout", "30", "The timeout value for the player stats panel");
+	g_bEnabled = CreateConVar("pstats_enabled", "1", "Enable/Disable tracking", 0, true, 0.0, true, 1.0);
+	g_bDebug = CreateConVar("pstats_debug_enabled", "0", "Enable debug messages", 0, true, 0.0, true, 1.0);
+	g_bVersusExclusive = CreateConVar("pstats_versus_exclusive", "1", "If set, stats collection will be exclusive to versus mode only", 0, true, 0.0, true, 1.0);
+	g_bRecordBots = CreateConVar("pstats_record_bots", "0", "Sets whether we should record bots", 0, true, 0.0, true, 1.0);
+	g_iStatsMenuTimeout = CreateConVar("pstats_menu_timeout", "30", "The timeout value for the player stats panel", 0, true, 3.0, true, 9999.0);
 	g_iStatsMaxTopPlayers = CreateConVar("pstats_max_top_players", defaultTopPlayerStr, "The max top N players to display", 0, true, float(DEFAULT_MIN_TOP_PLAYERS), true, float(DEFAULT_MAX_TOP_PLAYERS));
 	g_sGameMode = FindConVar("mp_gamemode");
 	
@@ -947,6 +947,7 @@ public void TQ_InitializePlayer(Database db, DBResultSet results, const char[] e
 	if (!IS_VALID_CLIENT(client)) {
 		Debug("TQ_InitializePlayer :: Client %N (%i) is not valid. Skipping initialization", client, client);
 		g_bInitializing[client] = false;
+		g_bPlayerInitialized[client] = false;
 		return;
 	}
 	
@@ -970,6 +971,8 @@ public void TQ_InitializePlayer(Database db, DBResultSet results, const char[] e
 	
 	g_bPlayerInitialized[client] = true;
 	g_bInitializing[client] = false;
+	
+	Debug("Player '%N' successfully initialized", client);
 }
 
 /**
