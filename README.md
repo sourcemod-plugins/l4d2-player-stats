@@ -94,7 +94,7 @@ Connect Announce Output:
 
 | Section Name    | Description                                                  |
 | --------------- | ------------------------------------------------------------ |
-| StatModifiers   | This section contains the point modifiers for the point system. These values affects the total points of the user. For example, if a player has killed 10 special infected by headshot (infected_headshot) and the point modifier is 2.5 the total points for the number of infected headshots would be 25. |
+| StatModifiers   | This section contains the modifiers for the point system. These values affects the total points of the user. For example, if a player has killed 10 special infected by headshot (infected_headshot) and the point modifier is 2.5 the total points for the number of infected headshots would be 25 (10 * 2.5). |
 | PlayerRankPanel | This section configures the display panel  of the player statistics/ranking. Currently you will only be able to customize the title of the panel. |
 | ConnectAnnounce | This section configures the format of the player connect announce. The formatting rules are explained below. |
 
