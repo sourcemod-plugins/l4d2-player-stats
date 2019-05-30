@@ -1,7 +1,5 @@
 ### **Simple Player Statistics Plugin for Left 4 Dead 2**
 
-[TOC]
-
 ### Features
 
 - This plugin tracks and records player statistics from human players. The following statistics are currently being recorded:
@@ -100,7 +98,7 @@ Connect Announce Output:
 | PlayerRankPanel | This section configures the display panel  of the player statistics/ranking. Currently you will only be able to customize the title of the panel. |
 | ConnectAnnounce | This section configures the format of the player connect announce. The formatting rules are explained below. |
 
-###### Connect Announce Formatting Rules
+#### Connect Announce Formatting Rules
 
 **<u>Colour Tags</u>**
 
