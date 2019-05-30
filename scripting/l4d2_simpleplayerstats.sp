@@ -655,7 +655,7 @@ public int GetInGamePlayerSteamIds(char[] buffer, int size) {
 	char steamId[128];
 	char tmp[128];
 	
-	int humanCount = GetHumanPlayerCount();
+	int humanCount = GetHumanPlayerCount(false);
 	
 	for (int i = 1; i <= MAX_CLIENTS; i++) {
 		if (IS_VALID_HUMAN(i) && (IS_VALID_SURVIVOR(i) || IS_VALID_INFECTED(i))) {
@@ -1050,13 +1050,18 @@ public bool ExtractPlayerStats(DBResultSet & results, StringMap & map) {
 }
 
 /**
-* Returns the number of human players currently in the server
+* Returns the number of human players currently in the server (including spectators)
 */
-public int GetHumanPlayerCount() {
+int GetHumanPlayerCount(bool includeSpec = true) {
 	int count = 0;
 	for (int i = 1; i <= MAX_CLIENTS; i++) {
-		if (IS_VALID_HUMAN(i))
-			count++;
+		if (includeSpec) {
+			if (IS_VALID_HUMAN(i))
+				count++;
+		} else {
+			if (IS_VALID_HUMAN(i) && (IS_VALID_SURVIVOR(i) || IS_VALID_INFECTED(i)))
+				count++;	
+		}
 	}
 	return count;
 }
