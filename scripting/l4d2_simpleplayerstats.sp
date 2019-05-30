@@ -147,19 +147,36 @@ public void OnPluginStart()
 }
 
 public bool AllowCollectStats() {
-	if (g_bEnabled.IntValue <= 0) {
-		Debug("Stats collection is currently disabled");
+	//Check if plugin is enabled
+	if (PluginDisabled()) {
+		Debug("Player stats is currently disabled. Stats will not be recorded");
 		return false;
 	}
 	
 	char gameMode[255];
 	g_sGameMode.GetString(gameMode, sizeof(gameMode));
+	
+	//If its not exclusive to versus, then just return true
 	if (g_bVersusExclusive.IntValue <= 0)
 		return true;
-	return StrEqual(gameMode, "versus");
+	
+	if (!StrEqual(gameMode, "versus")) {
+		Debug("Player stats is currently exclusive to versus game mode only. Stats will not be recorded (Current game mode: %s)", gameMode);
+		return false;
+	}
+	return true;
+}
+
+public bool PluginDisabled() {
+	return g_bEnabled.IntValue <= 0;
 }
 
 public Action Command_ReloadConfig(int client, int args) {
+	if (PluginDisabled()) {
+		PrintToChat(client, "Cannot execute command. Player stats is currently disabled.");
+		return Plugin_Handled;
+	}
+	
 	if (!LoadConfigData()) {
 		LogAction(client, -1, "Failed to reload plugin configuration file");
 		SetFailState("Problem loading/reading config file: %s", g_ConfigPath);
@@ -488,6 +505,10 @@ public void OnMapEnd() {
 * Callback for sm_topig command
 */
 public Action Command_ShowTopPlayersInGame(int client, int args) {
+	if (PluginDisabled()) {
+		PrintToChat(client, "Cannot execute command. Player stats is currently disabled.");
+		return Plugin_Handled;
+	}
 	//TODO
 	return Plugin_Handled;
 }
@@ -496,6 +517,11 @@ public Action Command_ShowTopPlayersInGame(int client, int args) {
 * Callback method for the sm_top console command
 */
 public Action Command_ShowTopPlayers(int client, int args) {
+	if (PluginDisabled()) {
+		PrintToChat(client, "Cannot execute command. Player stats is currently disabled.");
+		return Plugin_Handled;
+	}
+	
 	int maxPlayers = (g_iStatsMaxTopPlayers.IntValue <= 0) ? DEFAULT_MAX_TOP_PLAYERS : g_iStatsMaxTopPlayers.IntValue;
 	
 	if (args >= 1) {
@@ -525,6 +551,10 @@ public Action Command_ShowTopPlayers(int client, int args) {
 * Callback method for the command show rank
 */
 public Action Command_ShowRank(int client, int args) {
+	if (PluginDisabled()) {
+		PrintToChat(client, "Cannot execute command. Player stats is currently disabled.");
+		return Plugin_Handled;
+	}
 	
 	if (!IS_VALID_HUMAN(client)) {
 		Error("Client '%N' is not valid. Skipping show rank", client);
@@ -900,6 +930,8 @@ public void InitializePlayers() {
 * @param client The client index to initialize
 */
 public void InitializePlayer(int client, bool updateJoinDateIfExists) {
+	Debug("Initializing Client %N", client);
+	
 	if (!IS_VALID_CLIENT(client) || IsFakeClient(client)) {
 		Debug("InitializePlayer :: Client %i (%N) is not valid. Skipping Initialization", client, client);
 		return;
@@ -1120,12 +1152,15 @@ public void ParseStatsKeywords(const char[] text, char[] buffer, int size, Strin
 		char[] searchKey = new char[searchKeySize];
 		FormatEx(searchKey, searchKeySize, "{%s}", keyName);
 		
+		//Float search key
 		char[] searchKeyFloat = new char[searchKeySize];
 		FormatEx(searchKeyFloat, searchKeySize, "{f:%s}", keyName);
 		
+		//Int search key
 		char[] searchKeyInt = new char[searchKeySize];
 		FormatEx(searchKeyInt, searchKeySize, "{i:%s}", keyName);
 		
+		//Date search key
 		char[] searchKeyDate = new char[searchKeySize];
 		FormatEx(searchKeyDate, searchKeySize, "{d:%s}", keyName);
 		
@@ -1141,17 +1176,6 @@ public void ParseStatsKeywords(const char[] text, char[] buffer, int size, Strin
 		if ((pos = StrContains(g_ConfigAnnounceFormat, searchKey, false)) > -1) {
 			//Try extract string		
 			map.GetString(keyName, valueStr, sizeof(valueStr));
-			
-			//If string value is empty, try int
-			/*if (StringBlank(valueStr)) {
-				int valueInt;
-				map.GetValue(keyName, valueInt);
-				if (valueInt >= 0) {
-					IntToString(valueInt, valueStr, sizeof(valueStr));
-				} else {
-					Format(valueStr, sizeof(valueStr), "N/A");
-				}
-			}*/
 			Debug("(%i: %s) Key '%s' FOUND at position %i in (value = %s, type = string)", i, keyName, searchKey, pos, valueStr);
 			FormatEx(sKey, searchKeySize, searchKey);
 			found = true;
@@ -1168,6 +1192,14 @@ public void ParseStatsKeywords(const char[] text, char[] buffer, int size, Strin
 			FormatEx(valueStr, sizeof(valueStr), "%i", valueInt);
 			FormatEx(sKey, searchKeySize, searchKeyInt);
 			Debug("(%i: %s) Key '%s' FOUND at position %i in (value = %s, type = integer)", i, keyName, sKey, pos, valueStr);
+			found = true;
+		}
+		else if ((pos = StrContains(g_ConfigAnnounceFormat, searchKeyDate, false)) > -1) {
+			int valueInt;
+			map.GetValue(keyName, valueInt);
+			FormatEx(sKey, searchKeySize, searchKeyDate);
+			FormatTime(valueStr, sizeof(valueStr), NULL_STRING, valueInt);
+			Debug("(%i: %s) Key '%s' FOUND at position %i in (value = %s (%i), type = date)", i, keyName, sKey, pos, valueStr, valueInt);
 			found = true;
 		}
 		else {
@@ -1215,8 +1247,6 @@ public Action Event_PlayerIncapped(Event event, const char[] name, bool dontBroa
 	if (IS_VALID_CLIENT(attackerClientId) && !IsFakeClient(attackerClientId)) {
 		if (IS_VALID_INFECTED(attackerClientId) && IS_VALID_SURVIVOR(victimClientId)) {
 			UpdateStat(attackerClientId, STATS_SURVIVOR_INCAPPED, 1);
-		} else {
-			Debug("Skipped stats update for attacker %N", attackerClientId);
 		}
 	}
 	
@@ -1227,14 +1257,13 @@ public Action Event_WitchKilled(Event event, const char[] name, bool dontBroadca
 	int attackerId = event.GetInt("userid");
 	int attackerClientId = GetClientOfUserId(attackerId);
 	int witchId = event.GetInt("witchid");
-	bool oneShot = event.GetBool("oneshot");
+	//bool oneShot = event.GetBool("oneshot");
 	
 	//We will only process valid human survivor players
 	if (!IS_VALID_HUMAN(attackerClientId) || !IS_VALID_SURVIVOR(attackerClientId))
 		return Plugin_Continue;
 	
 	if (!AllowCollectStats()) {
-		Debug("Stats collection is curerntly disabled. Skipping for client %N", attackerClientId);
 		return Plugin_Continue;
 	}
 	
@@ -1258,7 +1287,6 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 	
 	if (IS_VALID_CLIENT(attackerClientId) && !attackerIsBot) {
 		if (!AllowCollectStats()) {
-			Debug("Stats collection is curerntly disabled. Skipping for client %N", attackerClientId);
 			return Plugin_Continue;
 		}
 		
@@ -1302,7 +1330,6 @@ public void UpdateStat(int client, const char[] column, int amount) {
 	}
 	
 	if (!AllowCollectStats()) {
-		Debug("Stats collection is curerntly disabled. Skipping for client %N", client);
 		return;
 	}
 	
