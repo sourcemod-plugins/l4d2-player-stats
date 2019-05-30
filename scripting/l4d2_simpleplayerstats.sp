@@ -943,7 +943,12 @@ public void InitializePlayer(int client, bool updateJoinDateIfExists) {
 	}
 	
 	char steamId[255];
-	GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId));
+	if (!GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId))) {
+		g_bInitializing[client] = false;
+		g_bPlayerInitialized[client] = false;
+		Error("Could not initialize player '%N'. Invalid steam id (%s)", client, steamId);
+		return;
+	}
 	
 	char name[255];
 	GetClientName(client, name, sizeof(name));
@@ -1319,6 +1324,10 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 * Utility function for updating the stat field of the player
 */
 public void UpdateStat(int client, const char[] column, int amount) {
+	if (!AllowCollectStats()) {
+		return;
+	}
+	
 	if (!IS_VALID_HUMAN(client)) {
 		PrintToChatAll("Skipping update stat. Client is not valid: %N", client);
 		return;
@@ -1328,11 +1337,7 @@ public void UpdateStat(int client, const char[] column, int amount) {
 		PrintToChatAll("Skipping update stat. Client is not initialized %N", client);
 		return;
 	}
-	
-	if (!AllowCollectStats()) {
-		return;
-	}
-	
+		
 	char steamId[255];
 	GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId));
 	
@@ -1350,12 +1355,6 @@ public void UpdateStat(int client, const char[] column, int amount) {
 	len = strlen(name) * 2 + 1;
 	char[] qName = new char[len];
 	SQL_EscapeString(g_hDatabase, name, qName, len);
-	
-	/*loat modifier;
-	if (!g_mStatModifiers.GetValue(column, modifier)) {
-		LogError("No modifier found for key '%s'. Using default value of 1.0", column);
-		modifier = 1.0;
-	}*/
 	
 	char query[255];
 	FormatEx(query, sizeof(query), "UPDATE STATS_PLAYERS SET %s = %s + %i, last_known_alias = '%s' WHERE steam_id = '%s'", qColumnName, qColumnName, amount, qName, qSteamId);
