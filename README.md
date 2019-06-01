@@ -1,4 +1,4 @@
-### **Simple Player Statistics Plugin for Left 4 Dead 2**
+### **Simple In-Game Player Statistics Plugin for Left 4 Dead 2**
 
 ### Features
 
