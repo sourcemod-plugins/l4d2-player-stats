@@ -184,6 +184,7 @@ public void OnPluginStart()
 	char defaultTopPlayerStr[32];
 	IntToString(DEFAULT_TOP_PLAYERS, defaultTopPlayerStr, sizeof(defaultTopPlayerStr));
 	
+	CreateConVar("pstats_version", PLUGIN_VERSION, "Plugin Version", FCVAR_DONTRECORD|FCVAR_NOTIFY);
 	g_bEnabled = CreateConVar("pstats_enabled", "1", "Enable/Disable tracking", _, true, 0.0, true, 1.0);
 	g_bDebug = CreateConVar("pstats_debug_enabled", "0", "Enable debug messages", _, true, 0.0, true, 1.0);
 	g_bVersusExclusive = CreateConVar("pstats_versus_exclusive", "1", "If set, stats collection will be exclusive to versus mode only", _, true, 0.0, true, 1.0);
