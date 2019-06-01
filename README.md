@@ -189,7 +189,7 @@ Tag Prefix
 | {f:total_points}      | Total Points (Sum of everything)                    |
 | {i:rank_num}          | Current Ranking                                     |
 
-Extra Tags
+Extra Tags (needs pstats_extras_enabled to be set)
 
 | Name                     | Description                                                  |
 | ------------------------ | ------------------------------------------------------------ |
