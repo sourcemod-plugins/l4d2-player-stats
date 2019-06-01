@@ -2,7 +2,7 @@
 
 ### Features
 
-- This plugin tracks and records player statistics from human players. The following statistics are currently being recorded:
+- This plugin records statistics gathered from human players. The following statistics are currently being recorded:
 
   Basic Statistics (Default)
 
