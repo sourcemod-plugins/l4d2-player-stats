@@ -54,7 +54,7 @@
 
   ![Ranks of all players in-game](ranks_ingame.png)
 
-- A point system is also implemented and can be further customized by modifying the point multipliers from the plugin configuration file (`playerstats.cfg`)
+- A points and ranking system is also implemented and can be further customized by modifying the point multipliers from the plugin configuration file (`playerstats.cfg`)
 
 ### Installation
 
@@ -98,19 +98,19 @@ The plugin can be further customized through the `playerstats.cfg` file located 
 		"infected_killed" 	"1.0"
 		"infected_headshot" "1.0"
 		"skeet_hunter_sniper" "1.0"
-        "skeet_hunter_shotgun" "1.0"
-        "skeet_hunter_melee" "1.0"
-        "skeet_tank_rock" "1.0"
-        "witch_crown_standard" "1.0"
-        "witch_crown_draw" "1.0"
-        "boomer_pop" "1.0"
-        "charger_level" "1.0"
-        "smoker_tongue_cut" "1.0"
-        "hunter_dead_stop" "1.0"
-        "boomer_quad" "1.0"
-        "hunter_twenty_five" "1.0"
-        "death_charge" "1.0"
-        "tank_rock_hits" "1.0"
+                "skeet_hunter_shotgun" "1.0"
+                "skeet_hunter_melee" "1.0"
+                "skeet_tank_rock" "1.0"
+                "witch_crown_standard" "1.0"
+                "witch_crown_draw" "1.0"
+                "boomer_pop" "1.0"
+                "charger_level" "1.0"
+                "smoker_tongue_cut" "1.0"
+                "hunter_dead_stop" "1.0"
+                "boomer_quad" "1.0"
+                "hunter_twenty_five" "1.0"
+                "death_charge" "1.0"
+                "tank_rock_hits" "1.0"
 	}
 	"StatPanels" 
 	{
