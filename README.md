@@ -58,7 +58,7 @@
 
 ### Installation
 
-Download the [latest](https://github.com/sourcemod-plugins/l4d2-player-stats/archive/master.zip) version from the repository and extract the contents of **l4d2-player-stats-master/** to the root directory of the left 4 dead 2 server installation. 
+Download the [latest](https://github.com/sourcemod-plugins/l4d2-player-stats/releases) version from the repository and extract the contents to the root of the left 4 dead 2 server installation directory. 
 
 ### Configuration
 
@@ -77,7 +77,7 @@ Download the [latest](https://github.com/sourcemod-plugins/l4d2-player-stats/arc
    {
    	"host"	    "<ip address>"
    	"driver"    "mysql"
-   	"database"  "playerstats"
+   	"database"  "<db name>"
    	"user"		"<username>"
    	"pass"		"<password>"
    	//"timeout"			"0"
@@ -140,7 +140,7 @@ Connect Announce Output:
 
 | Section Name    | Description                                                  |
 | --------------- | ------------------------------------------------------------ |
-| StatModifiers   | This section contains the modifiers for the point system. These values affects the total points of the user. For example, if a player has killed 10 special infected by headshot (infected_headshot) and the point modifier is 2.5 the total points for the number of infected headshots would be 25 (10 * 2.5). |
+| StatModifiers   | This section contains the modifiers for the point system. These values affects the total points of the user. For example, if a player killed 10 special infected by headshot (infected_headshot) and the point modifier is 2.5 the total points for the number of infected headshots would be 25 (10 * 2.5). |
 | StatPanels      | This section allows you to customize/add title headers to each of the available display panels. |
 | ConnectAnnounce | This section allows you to customize the the format of the player connect announce feature. Formatting rules are explained below. |
 
@@ -217,7 +217,7 @@ Extra Tags
 | Name                     | Description                                                  | Default value | Min Value | Max Value |
 | ------------------------ | ------------------------------------------------------------ | :------------ | --------- | --------- |
 | pstats_enabled           | Enable/Disable this plugin                                   | 1             | 0         | 1         |
-| pstats_debug_enabled     | Enable debug messages                                        | 0             | 0         | 1         |
+| pstats_debug_enabled     | Enable debug messages (for debugging purposes only)          | 0             | 0         | 1         |
 | pstats_versus_exclusive  | If set, the plugin will only work for versus gamemodes       | 1             | 0         | 1         |
 | pstats_record_bots       | Sets whether we should record bots. By default only human players are recorded. | 0             | 0         | 1         |
 | pstats_menu_timeout      | The timeout value for the player stats panel                 | 30 (seconds)  | 3         | 9999      |
