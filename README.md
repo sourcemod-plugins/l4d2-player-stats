@@ -138,7 +138,7 @@ Connect Announce Output:
 
 
 
-> Note: You can reload the configuration with the `sm_pstats_reload` command. Issuing this command will also synchronize the point modifiers on the STATS_MODIFIERS table.
+> **Note:** You can reload the configuration with the `sm_pstats_reload` command. This command can also synchronize the point modifiers to the STATS_SKILLS table by passing the `sync` argument (e.g. `sm_pstats_reload sync`).
 
 
 
