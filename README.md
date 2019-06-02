@@ -56,6 +56,12 @@
 
 - A points and ranking system is also implemented and can be further customized by modifying the point multipliers from the plugin configuration file (`playerstats.cfg`)
 
+### Requirements
+
+- Sourcemod 1.7 above
+- [Skill Detect Plugin](https://github.com/SirPlease/ZoneMod/raw/master/addons/sourcemod/plugins/optional/zonemod/l4d2_skill_detect.smx). This is only required if you need the extra statistics enabled
+- A working database system (mysql)
+
 ### Installation
 
 Download the [latest](https://github.com/sourcemod-plugins/l4d2-player-stats/releases) version from the repository and extract the contents to the root of the left 4 dead 2 server installation directory. 
