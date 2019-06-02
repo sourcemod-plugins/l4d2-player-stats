@@ -10,7 +10,7 @@
   | ------------------ | -------- | ------------------------------------------------------------ |
   | Survivors Kils     | Infected | Number of times an infected has killed a survivor            |
   | Survivors Incapped | Infected | Number of times an infected player has incapped a survivor   |
-  | Infected Kills     | Survivor | Number of times a survivor player has killed a Special Infected (Commons not counted) |
+  | Infected Kills     | Survivor | Number of times a survivor has killed a Special Infected     |
   | Infected Headshots | Survivor | Number of times a survivor killed a Special Infected by Headshot |
 
   Extra Statistics for the more skilled (Disabled by default)
@@ -22,8 +22,8 @@
   | Hunter Skeet (Melee)   | Survivor | Number of hunters skeeted with melee by a survivor           |
   | Tank Rock Skeets       | Survivor | Number rocks skeeted by a survivor                           |
   | Witch Crown (Standard) | Survivor | Number of standard witch crowns by a survivor (up close)     |
-  | Witch Crown (Draw)     | Survivor | Number of witch draw crowns by a survivor (chip from a distance and kill up-close) |
-  | Boomer Pops            | Survivor | Number of boomer pops by a survivor (Boomer spawning and getting killed without having the chance to hurt/boom a survivor) |
+  | Witch Crown (Draw)     | Survivor | Number of witch draw crowns by a survivor                    |
+  | Boomer Pops            | Survivor | Number of boomer pops by a survivor                          |
   | Charger Levels         | Survivor | Number of chargers leveled by a survivor                     |
   | Smoker Tongue Cuts     | Survivor | Number of smoker tongues cut by a survivor                   |
   | Hunter Deadstops       | Survivor | Number of hunter deadstops by a survivor                     |
@@ -84,10 +84,10 @@ Download the [latest](https://github.com/sourcemod-plugins/l4d2-player-stats/rel
    	"host"	    "<ip address>"
    	"driver"    "mysql"
    	"database"  "<db name>"
-   	"user"		"<username>"
-   	"pass"		"<password>"
-   	//"timeout"			"0"
-   	//"port"			"0"
+   	"user"      "<username>"
+   	"pass"      "<password>"
+   	//"timeout" "0"
+   	//"port"    "0"
    }
    ```
 
@@ -99,24 +99,24 @@ The plugin can be further customized through the `playerstats.cfg` file located 
 "PlayerStats" {
 	"StatModifiers" 
 	{
-		"survivor_killed" 	"1.0"
-		"survivor_incapped" "1.0"
-		"infected_killed" 	"1.0"
-		"infected_headshot" "1.0"
-		"skeet_hunter_sniper" "1.0"
-                "skeet_hunter_shotgun" "1.0"
-                "skeet_hunter_melee" "1.0"
-                "skeet_tank_rock" "1.0"
-                "witch_crown_standard" "1.0"
-                "witch_crown_draw" "1.0"
-                "boomer_pop" "1.0"
-                "charger_level" "1.0"
-                "smoker_tongue_cut" "1.0"
-                "hunter_dead_stop" "1.0"
-                "boomer_quad" "1.0"
-                "hunter_twenty_five" "1.0"
-                "death_charge" "1.0"
-                "tank_rock_hits" "1.0"
+        "survivor_killed" 	"1.0"
+        "survivor_incapped" "1.0"
+        "infected_killed" 	"1.0"
+        "infected_headshot" "1.0"
+        "skeet_hunter_sniper" "1.0"
+        "skeet_hunter_shotgun" "1.0"
+        "skeet_hunter_melee" "1.0"
+        "skeet_tank_rock" "1.0"
+        "witch_crown_standard" "1.0"
+        "witch_crown_draw" "1.0"
+        "boomer_pop" "1.0"
+        "charger_level" "1.0"
+        "smoker_tongue_cut" "1.0"
+        "hunter_dead_stop" "1.0"
+        "boomer_quad" "1.0"
+        "hunter_twenty_five" "1.0"
+        "death_charge" "1.0"
+        "tank_rock_hits" "1.0"
 	}
 	"StatPanels" 
 	{
@@ -154,7 +154,7 @@ Connect Announce Output:
 
 **<u>Colour Tags</u>** 
 
-> Note: Some colour tags might work for Left 4 Dead 2
+> Note: Some colour tags might NOT work for Left 4 Dead 2
 
 | Tag   | Color                                  |
 | ----- | -------------------------------------- |
