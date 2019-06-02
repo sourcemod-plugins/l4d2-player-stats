@@ -660,9 +660,9 @@ public void TQ_SyncStatModifiers(Database db, DBResultSet results, const char[] 
 	modifier = pack.ReadFloat();
 	
 	if (results.AffectedRows > 0) {
-		Debug("Synchronized cached entry to DB (%s = %.2f)", name, modifier);
+		Info("Synchronized cached entry to DB (%s = %.2f)", name, modifier);
 	} else {
-		Debug("Nothing was synced (%s = %.2f)", name, modifier);
+		Info("Nothing was synced (%s = %.2f)", name, modifier);
 	}
 }
 
@@ -1211,13 +1211,13 @@ public void TQ_ShowPlayerRankPanel(Database db, DBResultSet results, const char[
 			ExtractPlayerStats(results, map);
 			
 			char steamId[128];
-			int createDate;
-			int lastJoinDate;
+			char createDate[255];
+			char lastJoinDate[255];
 			
 			//Retrieve general info
 			map.GetString(STATS_STEAM_ID, steamId, sizeof(steamId));
-			map.GetValue(STATS_LAST_JOIN_DATE, lastJoinDate);
-			map.GetValue(STATS_CREATE_DATE, createDate);
+			map.GetString(STATS_LAST_JOIN_DATE, lastJoinDate, sizeof(lastJoinDate));
+			map.GetString(STATS_CREATE_DATE, createDate, sizeof(createDate));
 			
 			char msg[255];
 			Panel panel = new Panel();
@@ -1412,7 +1412,7 @@ public void TQ_ShowExtraStatsPanel(Database db, DBResultSet results, const char[
 			
 			PanelDrawStatLineBreak(panel);
 			
-			panel.DrawItem("Back", ITEMDRAW_DEFAULT);
+			PanelDrawStatItem(panel, "Back");
 			
 			panel.Send(client, ShowExtraStatsMenuHandler, g_iStatsMenuTimeout.IntValue);
 			
@@ -1423,6 +1423,25 @@ public void TQ_ShowExtraStatsPanel(Database db, DBResultSet results, const char[
 	}
 }
 
+/**
+* Retrieve the modifier/multiplier value for the requested stat key
+*/
+public float GetStatModifier(const char[] statKey) {
+	if (g_mStatModifiers == null) {
+		Error("GetStatMultiplier :: The modifier map has not yet been initialized. Using default.");
+		return DEFAULT_POINT_MODIFIER;
+	}
+	float modifier = DEFAULT_POINT_MODIFIER;
+	if (!g_mStatModifiers.GetValue(statKey, modifier)) {
+		Error("GetStatMultiplier :: Could not retrieve stat modifier for '%s'. Using default.", statKey);
+	}
+	Debug("Using modifier for '%s' = %.2f", statKey, modifier);
+	return modifier;
+}
+
+/**
+* Utility function to draw a stat item to a panel. Points are automatically computed by this method using the cached modifiers. 
+*/
 public void PanelDrawStat(Panel & panel, const char[] label, const char[] statKey, StringMap & map) {
 	int amount = 0;
 	char msg[64];
@@ -1437,14 +1456,7 @@ public void PanelDrawStat(Panel & panel, const char[] label, const char[] statKe
 	
 	int displayType = g_iStatsDisplayType.IntValue;
 	
-	//apply points modifier
-	float modifier = DEFAULT_POINT_MODIFIER;
-	
-	//retrieve modifier from global map (if available)
-	if (!g_mStatModifiers.GetValue(statKey, modifier))
-		Debug("No modifier found for stat '%s'. Default modifier will be used (%.2f).", statKey, DEFAULT_POINT_MODIFIER);
-	
-	float points = amount * modifier;
+	float points = amount * GetStatModifier(statKey);
 	
 	//display both points and amount	
 	if (displayType == STATS_DISPLAY_TYPE_BOTH) {
@@ -1552,68 +1564,16 @@ public void ExtractPlayerStats(DBResultSet & results, StringMap & map) {
 		return;
 	}
 	
-	int idxSteamId = -1;
-	int idxLastKnownAlias = -1;
-	int idxLastJoinDate = -1;
-	int idxSurvivorsKilled = -1;
-	int idxSurvivorsIncapped = -1;
-	int idxInfectedKilled = -1;
-	int idxInfectedHeadshot = -1;
-	int idxTotalPoints = -1;
-	int idxPlayerRank = -1;
-	int idxCreateDate = -1;
-	
-	//Retrieve field indices
-	results.FieldNameToNum(STATS_STEAM_ID, idxSteamId);
-	results.FieldNameToNum(STATS_LAST_KNOWN_ALIAS, idxLastKnownAlias);
-	results.FieldNameToNum(STATS_LAST_JOIN_DATE, idxLastJoinDate);
-	results.FieldNameToNum(STATS_SURVIVOR_KILLED, idxSurvivorsKilled);
-	results.FieldNameToNum(STATS_SURVIVOR_INCAPPED, idxSurvivorsIncapped);
-	results.FieldNameToNum(STATS_INFECTED_KILLED, idxInfectedKilled);
-	results.FieldNameToNum(STATS_INFECTED_HEADSHOT, idxInfectedHeadshot);
-	results.FieldNameToNum(STATS_TOTAL_POINTS, idxTotalPoints);
-	results.FieldNameToNum(STATS_RANK, idxPlayerRank);
-	results.FieldNameToNum(STATS_CREATE_DATE, idxCreateDate);
-	
-	//Fetch values
-	char steamId[128];
-	char lastKnownAlias[255];
-	int lastJoinDate = 0;
-	float totalPoints = 0.0;
-	int rankNum = -1;
-	
-	//Basic Stats
-	int survivorsKilled = 0;
-	int survivorsIncapped = 0;
-	int infectedKilled = 0;
-	int infectedHeadshot = 0;
-	int createDate = 0;
-	
-	//Fetch general info
-	results.FetchString(idxSteamId, steamId, sizeof(steamId));
-	results.FetchString(idxLastKnownAlias, lastKnownAlias, sizeof(lastKnownAlias));
-	lastJoinDate = results.FetchInt(idxLastJoinDate);
-	createDate = results.FetchInt(idxCreateDate);
-	totalPoints = results.FetchFloat(idxTotalPoints);
-	rankNum = results.FetchInt(idxPlayerRank);
-	
-	//Fetch basic stats
-	survivorsKilled = results.FetchInt(idxSurvivorsKilled);
-	survivorsIncapped = results.FetchInt(idxSurvivorsIncapped);
-	infectedKilled = results.FetchInt(idxInfectedKilled);
-	infectedHeadshot = results.FetchInt(idxInfectedHeadshot);
-	createDate = results.FetchInt(idxCreateDate);
-	
-	map.SetString(STATS_STEAM_ID, steamId, true);
-	map.SetString(STATS_LAST_KNOWN_ALIAS, lastKnownAlias, true);
-	map.SetValue(STATS_LAST_JOIN_DATE, lastJoinDate, true);
-	map.SetValue(STATS_TOTAL_POINTS, totalPoints, true);
-	map.SetValue(STATS_RANK, rankNum, true);
-	map.SetValue(STATS_SURVIVOR_KILLED, survivorsKilled, true);
-	map.SetValue(STATS_SURVIVOR_INCAPPED, survivorsIncapped, true);
-	map.SetValue(STATS_INFECTED_KILLED, infectedKilled, true);
-	map.SetValue(STATS_INFECTED_HEADSHOT, infectedHeadshot, true);
-	map.SetValue(STATS_CREATE_DATE, createDate, true);
+	FetchStrFieldToMap(results, STATS_STEAM_ID, map);
+	FetchStrFieldToMap(results, STATS_LAST_KNOWN_ALIAS, map);
+	FetchStrFieldToMap(results, STATS_LAST_JOIN_DATE, map);
+	FetchFloatFieldToMap(results, STATS_TOTAL_POINTS, map);
+	FetchIntFieldToMap(results, STATS_RANK, map);
+	FetchIntFieldToMap(results, STATS_SURVIVOR_KILLED, map);
+	FetchIntFieldToMap(results, STATS_SURVIVOR_INCAPPED, map);
+	FetchIntFieldToMap(results, STATS_INFECTED_KILLED, map);
+	FetchIntFieldToMap(results, STATS_INFECTED_HEADSHOT, map);
+	FetchStrFieldToMap(results, STATS_CREATE_DATE, map);
 }
 
 /**
@@ -1625,57 +1585,72 @@ public void ExtractPlayerStatsExtra(DBResultSet & results, StringMap & map) {
 		return;
 	}
 	
-	int idxSkeetHunterSniper = -1;
-	int idxSkeetHunterShotgun = -1;
-	int idxSkeetHunterMelee = -1;
-	int idxSkeetTankRock = -1;
-	int idxWitchCrownStandard = -1;
-	int idxWitchCrownDraw = -1;
-	int idxBoomerPop = -1;
-	int idxChargerLevel = -1;
-	int idxSmokerTongueCut = -1;
-	int idxHunterDeadStop = -1;
-	int idxBoomerQuad = -1;
-	int idxHunterTwentyFive = -1;
-	int idxDeathCharge = -1;
-	int idxTankRockHits = -1;
-	
-	bool success = true;
-	
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_SKEET_HUNTER_SNIPER, idxSkeetHunterSniper);
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_SKEET_HUNTER_SHOTGUN, idxSkeetHunterShotgun);
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_SKEET_HUNTER_MELEE, idxSkeetHunterMelee);
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_SKEET_TANK_ROCK, idxSkeetTankRock);
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_WITCH_CROWN_STD, idxWitchCrownStandard);
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_WITCH_CROWN_DRAW, idxWitchCrownDraw);
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_BOOMER_POP, idxBoomerPop);
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_CHARGER_LEVEL, idxChargerLevel);
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_SMOKER_TONGUE_CUT, idxSmokerTongueCut);
-	success &= results.FieldNameToNum(STATS_EXTRA_SURV_HUNTER_DEADSTOP, idxHunterDeadStop);
-	success &= results.FieldNameToNum(STATS_EXTRA_SI_BOOMER_QUAD, idxBoomerQuad);
-	success &= results.FieldNameToNum(STATS_EXTRA_SI_HUNTER_25, idxHunterTwentyFive);
-	success &= results.FieldNameToNum(STATS_EXTRA_SI_DEATHCHARGE, idxDeathCharge);
-	success &= results.FieldNameToNum(STATS_EXTRA_SI_TANK_ROCK_HITS, idxTankRockHits);
-	
-	if (!success) {
-		Error("There was a problem retrieving one of the field names from the result set");
-		return;
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_SKEET_HUNTER_SNIPER, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_SKEET_HUNTER_SHOTGUN, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_SKEET_HUNTER_MELEE, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_SKEET_TANK_ROCK, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_WITCH_CROWN_STD, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_WITCH_CROWN_DRAW, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_BOOMER_POP, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_CHARGER_LEVEL, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_SMOKER_TONGUE_CUT, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SURV_HUNTER_DEADSTOP, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SI_BOOMER_QUAD, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SI_HUNTER_25, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SI_DEATHCHARGE, map);
+	FetchIntFieldToMap(results, STATS_EXTRA_SI_TANK_ROCK_HITS, map);
+}
+
+/**
+* Convenience function to fetch a string field from a resultset and store it's value into a StringMap instance
+*/
+public bool FetchStrFieldToMap(DBResultSet & results, const char[] field, StringMap & map) {
+	if (results == null || map == null || StringBlank(field)) {
+		return false;
 	}
 	
-	map.SetValue(STATS_EXTRA_SURV_SKEET_HUNTER_SNIPER, results.FetchInt(idxSkeetHunterSniper));
-	map.SetValue(STATS_EXTRA_SURV_SKEET_HUNTER_SHOTGUN, results.FetchInt(idxSkeetHunterShotgun));
-	map.SetValue(STATS_EXTRA_SURV_SKEET_HUNTER_MELEE, results.FetchInt(idxSkeetHunterMelee));
-	map.SetValue(STATS_EXTRA_SURV_SKEET_TANK_ROCK, results.FetchInt(idxSkeetTankRock));
-	map.SetValue(STATS_EXTRA_SURV_WITCH_CROWN_STD, results.FetchInt(idxWitchCrownStandard));
-	map.SetValue(STATS_EXTRA_SURV_WITCH_CROWN_DRAW, results.FetchInt(idxWitchCrownDraw));
-	map.SetValue(STATS_EXTRA_SURV_BOOMER_POP, results.FetchInt(idxBoomerPop));
-	map.SetValue(STATS_EXTRA_SURV_CHARGER_LEVEL, results.FetchInt(idxChargerLevel));
-	map.SetValue(STATS_EXTRA_SURV_SMOKER_TONGUE_CUT, results.FetchInt(idxSmokerTongueCut));
-	map.SetValue(STATS_EXTRA_SURV_HUNTER_DEADSTOP, results.FetchInt(idxHunterDeadStop));
-	map.SetValue(STATS_EXTRA_SI_BOOMER_QUAD, results.FetchInt(idxBoomerQuad));
-	map.SetValue(STATS_EXTRA_SI_HUNTER_25, results.FetchInt(idxHunterTwentyFive));
-	map.SetValue(STATS_EXTRA_SI_DEATHCHARGE, results.FetchInt(idxDeathCharge));
-	map.SetValue(STATS_EXTRA_SI_TANK_ROCK_HITS, results.FetchInt(idxTankRockHits));
+	int fieldId = -1;
+	if (results.FieldNameToNum(field, fieldId) && fieldId >= 0) {
+		char value[255]; 
+		results.FetchString(fieldId, value, sizeof(value));
+		map.SetString(field, value, true);
+		return true;
+	}
+	return false;
+}
+
+/**
+* Convenience function to fetch a float field from a resultset and store it's value into a StringMap instance
+*/
+public bool FetchFloatFieldToMap(DBResultSet & results, const char[] field, StringMap & map) {
+	if (results == null || map == null || StringBlank(field)) {
+		return false;
+	}
+	
+	int fieldId = -1;
+	if (results.FieldNameToNum(field, fieldId) && fieldId >= 0) {
+		float value = results.FetchFloat(fieldId);
+		map.SetValue(field, value, true);
+		return true;
+	}
+	return false;
+}
+
+/**
+* Convenience function to fetch an integer field from a resultset and store it's value into a StringMap instance
+*/
+public bool FetchIntFieldToMap(DBResultSet & results, const char[] field, StringMap & map) {
+	if (results == null || map == null || StringBlank(field)) {
+		return false;
+	}
+	
+	int fieldId = -1;
+	if (results.FieldNameToNum(field, fieldId) && fieldId >= 0) {
+		int value = results.FetchInt(fieldId);
+		map.SetValue(field, value, true);
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -1984,8 +1959,8 @@ public void TQ_PlayerConnectAnnounce(Database db, DBResultSet results, const cha
 			
 			char steamId[128];
 			char lastKnownAlias[255];
-			int createDate;
-			int lastJoinDate;
+			char createDate[255];
+			char lastJoinDate[255];
 			float totalPoints;
 			int rankNum;
 			int survivorsKilled;
@@ -1995,19 +1970,20 @@ public void TQ_PlayerConnectAnnounce(Database db, DBResultSet results, const cha
 			
 			map.GetString(STATS_STEAM_ID, steamId, sizeof(steamId));
 			map.GetString(STATS_LAST_KNOWN_ALIAS, lastKnownAlias, sizeof(lastKnownAlias));
-			map.GetValue(STATS_LAST_JOIN_DATE, lastJoinDate);
+			map.GetString(STATS_LAST_JOIN_DATE, lastJoinDate, sizeof(lastJoinDate));
+			map.GetString(STATS_CREATE_DATE, createDate, sizeof(createDate));
 			map.GetValue(STATS_TOTAL_POINTS, totalPoints);
 			map.GetValue(STATS_RANK, rankNum);
 			map.GetValue(STATS_SURVIVOR_KILLED, survivorsKilled);
 			map.GetValue(STATS_SURVIVOR_INCAPPED, survivorsIncapped);
 			map.GetValue(STATS_INFECTED_KILLED, infectedKilled);
 			map.GetValue(STATS_INFECTED_HEADSHOT, infectedHeadshot);
-			map.GetValue(STATS_CREATE_DATE, createDate);
 			
-			char tmpMsg[253];
+			char tmpMsg[255];
 			
 			//parse stats
 			ParseKeywordsWithMap(g_ConfigAnnounceFormat, tmpMsg, sizeof(tmpMsg), map);
+			
 			Debug("PARSE RESULT = %s", tmpMsg);
 			
 			Client_PrintToChatAll(true, tmpMsg);
@@ -2094,11 +2070,10 @@ public void ParseKeywordsWithMap(const char[] text, char[] buffer, int size, Str
 			found = true;
 		}
 		else if ((pos = StrContains(g_ConfigAnnounceFormat, searchKeyDate, false)) > -1) {
-			int valueInt;
-			map.GetValue(keyName, valueInt);
+			map.GetString(keyName, valueStr, sizeof(valueStr));
 			FormatEx(sKey, searchKeySize, searchKeyDate);
-			FormatTime(valueStr, sizeof(valueStr), NULL_STRING, valueInt);
-			Debug("(%i: %s) Key '%s' FOUND at position %i (value = %s (%i), type = date)", i, keyName, sKey, pos, valueStr, valueInt);
+			//FormatTime(valueStr, sizeof(valueStr), NULL_STRING, valueInt);
+			Debug("(%i: %s) Key '%s' FOUND at position %i (value = %s, type = date)", i, keyName, sKey, pos, valueStr);
 			found = true;
 		}
 		else {
@@ -2275,7 +2250,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 /**
 * Utility function for updating the stat field of the player
 */
-public void UpdateStat(int client, const char[] column, int amount) {
+void UpdateStat(int client, const char[] column, int amount = 1, int victim = -1) {
 	if (!AllowCollectStats()) {
 		return;
 	}
@@ -2325,29 +2300,41 @@ public void UpdateStat(int client, const char[] column, int amount) {
 	pack.WriteString(column);
 	pack.WriteCell(client);
 	pack.WriteCell(amount);
+	pack.WriteCell(victim);
 	
 	g_hDatabase.Query(TQ_UpdateStat, query, pack);
 }
 
-public void TQ_UpdateStat(Database db, DBResultSet results, const char[] error, any data) {
+public void TQ_UpdateStat(Database db, DBResultSet results, const char[] error, DataPack pack) {
 	if (results == null) {
 		Error("TQ_UpdateStat :: Query failed (Reason: %s)", error);
 		return;
 	}
 	
-	DataPack pack = data;
 	char column[128];
 	
 	pack.Reset();
 	pack.ReadString(column, sizeof(column));
 	int clientId = pack.ReadCell();
-	int points = pack.ReadCell();
+	int count = pack.ReadCell();
+	int victimId = pack.ReadCell();
+	
+	float modifier = GetStatModifier(column);
+	float points = count * modifier;
 	
 	if (results.AffectedRows > 0) {
-		Debug("Stat '%s' updated for %N (Points: %i)", column, clientId, points);
+		if (IS_VALID_CLIENT(victimId)) {
+			Debug("Stat '%s' updated for %N (Count: %i, Multiplier: %.2f, Points: %.2f, Victim: %N)", column, clientId, count, modifier, points, victimId);
+		} else {
+			Debug("Stat '%s' updated for %N (Count: %i, Multiplier: %.2f, Points: %.2f, Victim: N/A)", column, clientId, count, modifier, points);
+		}
 	}
 	else {
-		Debug("Stat '%s' not updated for %N (Points: %i)", column, clientId, points);
+		if (IS_VALID_CLIENT(victimId)) { 
+			Debug("Stat '%s' not updated for %N (Count: %i, Multiplier: %.2f, Points: %.2f, Victim: %N)", column, clientId, count, modifier, points, victimId);
+		} else {
+			Debug("Stat '%s' not updated for %N (Count: %i, Multiplier: %.2f, Points: %.2f, Victim: N/A)", column, clientId, count, modifier, points);
+		}
 	}
 	
 	delete pack;
@@ -2701,7 +2688,8 @@ public void OnBunnyHopStreak(int survivor, int streak, float maxVelocity) {
 		Debug("Stat 'OnBunnyHopStreak' is skipped. Extra stat recording is disabled");
 		return;
 	}
-	Debug("%N had a BHOP stream of %i (Speed: %.2f)", survivor, streak, maxVelocity);
+	if (streak >= 3)
+		Debug("%N had a BHOP streak of %i (Speed: %.2f)", survivor, streak, maxVelocity);
 }
 
 /************* END: SKILL DETECTION *********************/
