@@ -120,7 +120,7 @@ The plugin can be further customized through the `playerstats.cfg` file located 
     }
     "StatPanels" 
     {
-    "title_rank_player"     "Player Stats"
+        "title_rank_player"     "Player Stats"
         "title_rank_topn"       "Top {top_player_count} Players"
         "title_rank_ingame"     "Player In-Game Ranks"
         "title_rank_extras"     "Extra Player Stats"
