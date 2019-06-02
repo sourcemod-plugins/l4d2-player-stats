@@ -17,7 +17,7 @@
 
   | Name                   | Team     | Description                                                  |
   | ---------------------- | -------- | ------------------------------------------------------------ |
-  | Hunter Skeet (Sniper)  | Survivor | Number of hunters skeeted with sniper by a survivor          |
+  | Hunter Skeet (Sniper)  | Survivor | Number of hunters skeeted with sniper by a survivor. Counts only 1 tap heashots          |
   | Hunter Skeet (SG)      | Survivor | Number of hunters skeeted with shotgun by a survivor         |
   | Hunter Skeet (Melee)   | Survivor | Number of hunters skeeted with melee by a survivor           |
   | Tank Rock Skeets       | Survivor | Number rocks skeeted by a survivor                           |
