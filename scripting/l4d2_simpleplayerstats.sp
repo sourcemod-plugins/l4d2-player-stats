@@ -103,6 +103,10 @@
 
 Database g_hDatabase = null;
 StringMap g_mStatModifiers;
+StringMap g_mPlayersInitialized;
+
+//Prepared statements
+DBStatement g_hQueryRecordExists = null;
 
 bool g_bPlayerInitialized[MAXPLAYERS + 1] = false;
 bool g_bInitializing[MAXPLAYERS + 1] = false;
@@ -199,6 +203,7 @@ public void OnPluginStart()
 	g_sGameMode = FindConVar("mp_gamemode");
 	g_sServerName = FindConVar("hostname");
 	g_mStatModifiers = new StringMap();
+	g_mPlayersInitialized = new StringMap();
 	
 	if (!InitDatabase()) {
 		Error("Could not connect to the database. Please check your database configuration file and make sure everything is configured correctly. (db section name: %s)", DB_CONFIG_NAME);
@@ -566,6 +571,32 @@ bool LoadConfigData() {
 	return true;
 }
 
+public bool PlayerRecordExists(const char[] steamId) {
+	int count = 0;
+	
+	if (g_hQueryRecordExists == null) {
+		char error[255];
+		g_hQueryRecordExists = SQL_PrepareQuery(g_hDatabase, "SELECT COUNT(1) FROM STATS_PLAYERS s WHERE s.steam_id = ? LIMIT 1", error, sizeof(error));
+		if (g_hQueryRecordExists == null) {
+			Error("PlayerRecordExists :: Unable to prepare sql query (Reason: %s)", error);
+			return false;
+		}
+	}
+	
+	SQL_BindParamString(g_hQueryRecordExists, 0, steamId, false);
+	
+	if (!SQL_Execute(g_hQueryRecordExists)) {
+		Error("Unable to execute query for PlayerRecordExists");
+		return false;
+	}
+	
+	if (SQL_FetchRow(g_hQueryRecordExists)) {
+		count = SQL_FetchInt(g_hQueryRecordExists, 0);
+	}
+	
+	return count > 0;
+}
+
 public int GetStatModifierCount() {
 	int count = 0;
 	DBResultSet query = SQL_Query(g_hDatabase, "SELECT COUNT(1) FROM STATS_SKILLS");
@@ -679,7 +710,13 @@ public Action Event_PlayerConnect(Event event, const char[] name, bool dontBroad
 	
 	if (!isBot) {
 		int client = GetClientOfUserId(userid);
-		Debug("\n\nPLAYER_CONNECT_EVENT :: Name = %s, Steam ID: %s, IP: %s, Slot: %i, User ID: %i, Is Bot: %i, Client ID: %i\n\n", playerName, steamId, ipAddress, slot, userid, isBot, client);
+		Debug("\n\nPLAYER_CONNECT_EVENT :: Name = %s, Steam ID: %s, IP: %s, Slot: %i, User ID: %i, Is Bot: %i, Client ID: %i\n\n", playerName, steamId, ipAddress, slot, userid, isBot, client);		
+		if (PlayerRecordExists(steamId)) {
+			Info("Found existing record for player '%s' (%s)", playerName, steamId);
+		} else {
+			Debug("\n\nNo player record found for %s (%s)", playerName, steamId);
+		}
+		
 		//InitializePlayer(client, true);
 	}
 }
@@ -1741,6 +1778,74 @@ public void InitializePlayer(int client, bool updateJoinDateIfExists) {
 	g_hDatabase.Query(TQ_InitializePlayer, query, client);
 }
 
+public void InitializePlayerById(const char[] name, const char[] steamId, bool updateJoinDateIfExists) {
+	Debug("Initializing Player %s (%s)", name, steamId);
+		
+	//unnecessary? 
+	int len = strlen(steamId) * 2 + 1;
+	char[] qSteamId = new char[len];
+	SQL_EscapeString(g_hDatabase, steamId, qSteamId, len);
+	
+	len = strlen(name) * 2 + 1;
+	char[] qName = new char[len];
+	SQL_EscapeString(g_hDatabase, name, qName, len);
+	
+	char query[512];
+	
+	if (updateJoinDateIfExists) {
+		Debug("InitializePlayerById :: Join date will be updated for %s", name);
+		FormatEx(query, sizeof(query), "INSERT INTO STATS_PLAYERS (steam_id, last_known_alias, last_join_date) VALUES ('%s', '%s', CURRENT_TIMESTAMP()) ON DUPLICATE KEY UPDATE last_join_date = CURRENT_TIMESTAMP(), last_known_alias = '%s'", qSteamId, qName, qName);
+	}
+	else {
+		Debug("InitializePlayerById :: Join date will NOT be updated for %s", name);
+		FormatEx(query, sizeof(query), "INSERT INTO STATS_PLAYERS (steam_id, last_known_alias, last_join_date) VALUES ('%s', '%s', CURRENT_TIMESTAMP()) ON DUPLICATE KEY UPDATE last_known_alias = '%s'", qSteamId, qName, qName);
+	}
+	
+	DataPack pack = new DataPack();
+	pack.WriteString(name);
+	pack.WriteString(steamId);
+	
+	//g_bInitializing[client] = true;
+	g_hDatabase.Query(TQ_InitializePlayerBySteamId, query, pack);	
+}
+
+/**
+* SQL Callback for InitializePlayer threaded query
+*/
+public void TQ_InitializePlayerBySteamId(Database db, DBResultSet results, const char[] error, DataPack pack) {
+
+	char name[MAX_NAME_LENGTH];
+	char steamId[MAX_STEAMAUTH_LENGTH];
+	
+	pack.Reset();	
+	pack.ReadString(name, sizeof(name));
+	pack.ReadString(steamId, sizeof(steamId));
+		
+	if (results == null) {
+		Error("TQ_InitializePlayerBySteamId :: Query failed (Reason: %s)", error);
+		//g_bPlayerInitialized[client] = false;
+		//g_bInitializing[client] = false;
+		return;
+	}
+	
+	if (results.AffectedRows == 0) {
+		Debug("TQ_InitializePlayerBySteamId :: Nothing was updated for player %s (%s)", name, steamId);
+	}
+	else if (results.AffectedRows == 1) {
+		Debug("TQ_InitializePlayerBySteamId :: Player %s (%s) has been initialized for the first time", name, steamId);
+	}
+	else if (results.AffectedRows > 1) {
+		Debug("TQ_InitializePlayerBySteamId :: Existing record has been updated for player %s (%s)", name, steamId);
+	}
+	
+	//g_bPlayerInitialized[client] = true;
+	//g_bInitializing[client] = false;
+	
+	g_mPlayersInitialized.SetValue(steamId, true);
+	
+	Debug("Player %s (%s) successfully initialized", name, steamId);
+}
+
 /**
 * SQL Callback for InitializePlayer threaded query
 */
@@ -2033,7 +2138,7 @@ public Action Event_PlayerTeam(Event event, const char[] name, bool dontBroadcas
 	event.GetString("name", playerName, sizeof(playerName));
 	
 	//Only display the rank panel if the player has completed transitioning to a team
-	if (IS_VALID_CLIENT(clientId) && !isBot) {
+	if (IS_VALID_CLIENT(clientId) && !isBot && !disconnect) {
 		Debug("Player %N has joined a team (old team = %i, new team = %i, disconnect = %i, bot = %i)", clientId, oldTeamId, newTeamId, disconnect, isBot);
 		if (ShowRankOnConnect() && !PlayerRankShown(clientId) && IS_VALID_HUMAN(clientId)) {
 			char steamId[MAX_STEAMAUTH_LENGTH];
