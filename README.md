@@ -99,31 +99,31 @@ The plugin can be further customized through the `playerstats.cfg` file located 
 "PlayerStats" {
     "StatModifiers" 
     {
-        "survivor_killed"   "1.0"
-        "survivor_incapped" "1.0"
-        "infected_killed"   "1.0"
-        "infected_headshot" "1.0"
-        "skeet_hunter_sniper" "1.0"
-        "skeet_hunter_shotgun" "1.0"
-        "skeet_hunter_melee" "1.0"
-        "skeet_tank_rock" "1.0"
-        "witch_crown_standard" "1.0"
-        "witch_crown_draw" "1.0"
-        "boomer_pop" "1.0"
-        "charger_level" "1.0"
-        "smoker_tongue_cut" "1.0"
-        "hunter_dead_stop" "1.0"
-        "boomer_quad" "1.0"
-        "hunter_twenty_five" "1.0"
-        "death_charge" "1.0"
-        "tank_rock_hits" "1.0"
+        "survivor_killed"       "1.0"
+        "survivor_incapped"     "1.0"
+        "infected_killed"       "1.0"
+        "infected_headshot"     "1.0"
+        "skeet_hunter_sniper"   "1.0"
+        "skeet_hunter_shotgun"  "1.0"
+        "skeet_hunter_melee"    "1.0"
+        "skeet_tank_rock"       "1.0"
+        "witch_crown_standard"  "1.0"
+        "witch_crown_draw"      "1.0"
+        "boomer_pop"            "1.0"
+        "charger_level"         "1.0"
+        "smoker_tongue_cut"     "1.0"
+        "hunter_dead_stop"      "1.0"
+        "boomer_quad"           "1.0"
+        "hunter_twenty_five"    "1.0"
+        "death_charge"          "1.0"
+        "tank_rock_hits"        "1.0"
     }
     "StatPanels" 
     {
-        "title_rank_player"     "Player Stats"
-        "title_rank_topn"       "Top {top_player_count} Players"
-        "title_rank_ingame"     "Player In-Game Ranks"
-        "title_rank_extras"     "Extra Player Stats"
+        "title_rank_player"   "Player Stats"
+        "title_rank_topn"     "Top {top_player_count} Players"
+        "title_rank_ingame"   "In-Game Player Ranks"
+        "title_rank_extras"   "Extra Player Stats"
     }
     "ConnectAnnounce" 
     {
@@ -173,7 +173,7 @@ Connect Announce Output:
 
 **<u>Special Tags</u>**
 
-Some tags are prefixed with "d", "i" or "f". These prefixes are necessary to identify the type of the data so the plugin will be able to interpret it correctly when read from the database. 
+Some tags are prefixed with "d", "i" or "f". These prefixes are necessary to identify the type of the data so the plugin will be able to interpret it correctly when read from the database. Non-prefixed tags are strings by default.
 
 Tag Prefix
 
