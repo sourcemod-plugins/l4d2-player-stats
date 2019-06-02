@@ -28,7 +28,7 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "mac & cheese (a.k.a thresh0ld)"
-#define PLUGIN_VERSION "1.0.0-alpha"
+#define PLUGIN_VERSION "1.1.0-alpha"
 
 #define TEAM_SPECTATOR          1
 #define TEAM_SURVIVOR           2
