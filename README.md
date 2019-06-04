@@ -95,6 +95,8 @@ Download the [latest](https://github.com/sourcemod-plugins/l4d2-player-stats/rel
 
 The plugin can be further customized through the `playerstats.cfg` file located under `addons/sourcemod/configs/`. The default entries will look like this:
 
+> *REMEMBER*: After you have edited the StatModifiers section, you need to run the command `sm_pstats_reload sync` to update the values on the database
+
 ```
 "PlayerStats" {
     "StatModifiers" 
