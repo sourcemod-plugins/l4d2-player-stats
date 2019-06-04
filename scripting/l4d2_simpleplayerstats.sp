@@ -28,6 +28,8 @@
 * 1.0.1-alpha - 6/4/2019
 * - Bug Fix: Extra stats item from player rank panel does not execute when selected
 * - Bug Fix: Error 'Client index is invalid' thrown during player initialization
+* - Verify if steamid is valid for ShowInGamePlayerRanks
+* - Bug Fix: Views in the database were hardcoded to query from 'playerstats' database. This will not work for those who use a different database name.
 *
 */
 
@@ -1018,7 +1020,10 @@ public void ShowInGamePlayerRanks(int client) {
 	}
 	
 	char steamId[128];
-	GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId));
+	if (!GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId))) {
+		Error("ShowInGamePlayerRanks :: Could not retrieve a valid steam id for '%N'", client);
+		return;
+	}
 	
 	char steamIds[256];
 	int count = GetInGamePlayerSteamIds(steamIds, sizeof(steamIds));
