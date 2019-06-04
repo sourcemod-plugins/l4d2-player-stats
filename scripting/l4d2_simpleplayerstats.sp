@@ -30,7 +30,8 @@
 * - Bug Fix: Error 'Client index is invalid' thrown during player initialization
 * - Verify if steamid is valid for ShowInGamePlayerRanks
 * - Bug Fix: Views in the database were hardcoded to query from 'playerstats' database. This will not work for those who use a different database name.
-*
+* - Added console command 'sm_hidestats'. Allow players to hide their extra stats from others.
+* - Bug Fix: Fixed wrong parameter count for Notify().
 */
 
 #include <sourcemod>
