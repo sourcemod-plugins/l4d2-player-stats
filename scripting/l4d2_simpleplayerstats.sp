@@ -17,6 +17,20 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+/*
+* -------------------------------------------------
+* Change Log
+* -------------------------------------------------
+* 
+* 1.0.0-alpha - 6/1/2019
+*  - Initial Release
+*
+* 1.0.1-alpha - 6/4/2019
+* - Bug Fix: Extra stats item from player rank panel does not execute when selected
+* - Bug Fix: Error 'Client index is invalid' thrown during player initialization
+*
+*/
+
 #include <sourcemod>
 #include <clientprefs>
 #include <sdktools>
@@ -28,7 +42,7 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "mac & cheese (a.k.a thresh0ld)"
-#define PLUGIN_VERSION "1.1.0-alpha"
+#define PLUGIN_VERSION "1.0.1-alpha"
 
 #define TEAM_SPECTATOR          1
 #define TEAM_SURVIVOR           2
@@ -123,9 +137,8 @@ char g_StatPanelTitleInGame[255];
 char g_StatPanelTitleExtras[255];
 
 char g_ConfigAnnounceFormat[512];
+char g_SelSteamIds[MAXPLAYERS + 1][MAX_STEAMAUTH_LENGTH];
 bool g_bSkillDetectLoaded = false;
-char g_SelSteamIds[MAXPLAYERS + 1][64];
-
 ConVar g_bDebug;
 ConVar g_bVersusExclusive;
 ConVar g_bEnabled;
@@ -216,7 +229,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_ranks", Command_ShowTopPlayersInGame, "Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player.");
 	RegConsoleCmd("sm_hidestats", Command_HideExtraFromPublic, "If set by the player, extra stats will not be shown to the public (e.g. via top 10 panel)");
 	RegAdminCmd("sm_pstats_reload", Command_ReloadConfig, ADMFLAG_ROOT, "Reloads plugin configuration. This is useful if you have modified the playerstats.cfg file. This command also synchronizes the modifier values set from the configuration file to the database.");
-	RegAdminCmd("sm_pstats_wipe", Command_WipeRecord, ADMFLAG_ROOT, "Wipe the record of a player (Reset all back to 0)");
+	RegAdminCmd("sm_pstats_wipe", Command_WipeRecord, ADMFLAG_ROOT, "Wipes/Reset the record of a player (Reset all back to 0)");
 	
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
 	HookEvent("player_incapacitated", Event_PlayerIncapped, EventHookMode_Post);
@@ -238,7 +251,6 @@ public void OnPluginStart()
 */
 public void OnAllPluginsLoaded() {
 	g_bSkillDetectLoaded = LibraryExists("skill_detect");
-	
 	Debug("OnAllPluginsLoaded()");
 }
 
@@ -413,7 +425,7 @@ public Action Command_HideExtraFromPublic(int client, int args) {
 void HideStats(const char[] steamId, bool hide, int client = -1) {
 	int len = strlen(steamId) * 2 + 1;
 	char[] qSteamId = new char[len];
-	SQL_EscapeString(g_hDatabase, steamId, qSteamId, len);	
+	SQL_EscapeString(g_hDatabase, steamId, qSteamId, len);
 	
 	char query[128];
 	Format(query, sizeof(query), "UPDATE STATS_PLAYERS SET hide_extra_stats = %i WHERE steam_id = '%s'", (hide) ? 1 : 0, qSteamId);
@@ -423,7 +435,7 @@ void HideStats(const char[] steamId, bool hide, int client = -1) {
 	pack.WriteCell(client);
 	pack.WriteCell(hide);
 	
-	g_hDatabase.Query(TQ_HideStats, query, pack);	
+	g_hDatabase.Query(TQ_HideStats, query, pack);
 }
 
 public void TQ_HideStats(Database db, DBResultSet results, const char[] error, DataPack pack) {
@@ -438,7 +450,7 @@ public void TQ_HideStats(Database db, DBResultSet results, const char[] error, D
 	int clientId = pack.ReadCell();
 	bool hide = pack.ReadCell();
 	
-	if (results.AffectedRows >= 0) {	
+	if (results.AffectedRows >= 0) {
 		if (hide) {
 			Notify(clientId, "Your extra stats should now be hidden from public viewing");
 		} else {
@@ -500,6 +512,9 @@ public Action Command_WipeRecord(int client, int args) {
 	return Plugin_Handled;
 }
 
+/**
+* Reset the stats of the specified player. This will NOT delete a player record.
+*/
 void WipePlayerRecord(const char[] steamId, int client = -1) {
 	if (StringBlank(steamId)) {
 		return;
@@ -542,14 +557,6 @@ void WipePlayerRecord(const char[] steamId, int client = -1) {
 	g_hDatabase.Query(TQ_WipePlayerRecord, query, pack);
 }
 
-public int ComputeBufferSize(const char[][] arr, int size) {
-	int len = 0;
-	for (int i = 0; i < size; i++) {
-		len += strlen(arr[i]);
-	}
-	return len;
-}
-
 public void TQ_WipePlayerRecord(Database db, DBResultSet results, const char[] error, DataPack pack) {
 	if (results == null) {
 		Error("TQ_WipePlayerRecord :: Query failed (Reason: %s)", error);
@@ -568,6 +575,17 @@ public void TQ_WipePlayerRecord(Database db, DBResultSet results, const char[] e
 	}
 	
 	delete pack;
+}
+
+/**
+* Computes the sum of the length of each element on the multi-dimensional character array
+*/
+stock int ComputeBufferSize(const char[][] arr, int size) {
+	int len = 0;
+	for (int i = 0; i < size; i++) {
+		len += strlen(arr[i]);
+	}
+	return len;
 }
 
 /**
@@ -1886,9 +1904,11 @@ public bool FetchIntFieldToMap(DBResultSet & results, const char[] field, String
 /**
 * Returns the number of human players currently in the server (including spectators)
 */
-int GetHumanPlayerCount(bool includeSpec = true) {
+int GetHumanPlayerCount(bool includeSpec = true, int excludeClient = -1) {
 	int count = 0;
 	for (int i = 1; i <= MAX_CLIENTS; i++) {
+		if (excludeClient >= 1 && i == excludeClient)
+			continue;
 		if (includeSpec) {
 			if (IS_VALID_HUMAN(i))
 				count++;
@@ -2067,7 +2087,7 @@ public void TQ_InitializePlayer(Database db, DBResultSet results, const char[] e
 	int client = data;
 	
 	if (!IS_VALID_CLIENT(client) || !IsClientConnected(client)) {
-		Debug("TQ_InitializePlayer :: Client %N (%i) is not valid or not connected. Skipping initialization", client, client);
+		Debug("TQ_InitializePlayer :: Client index '%i' is not valid or not connected. Skipping initialization", client);
 		ResetInitializeFlags(client);
 		return;
 	}
@@ -3169,4 +3189,4 @@ public void Debug(const char[] format, any...)
 			PrintToConsole(i, debugMessage);
 	}
 	#endif
-} 
+}
