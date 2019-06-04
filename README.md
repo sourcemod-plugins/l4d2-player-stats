@@ -241,7 +241,7 @@ Extra Tags (needs pstats_extras_enabled to be set)
 | ---------------- | ------------------------------------------------------------ | ---------- | ------------ | -------------------------------------- |
 | sm_rank          | Display the current stats & ranking of the requesting player. A panel will be displayed to the player. | None       | Anyone       | None                                   |
 | sm_top           | Display the top N players. A menu panel will be displayed to the requesting player | Number     | Anyone       | The number of players to be displayed. |
-| sm_ranks         | Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player. | Number     | Anyone       | The number of players to be displayed. |
+| sm_ranks         | Display the ranks of the players currently playing in the server. A menu panel will be displayed to the requesting player. | Number     | Anyone       | None                                   |
 | sm_pstats_reload | Reloads plugin configuration. This is useful if you have modified the `playerstats.cfg` file. 'This command also synchronizes the modifier values set from the configuration file to the database. This is quite an expensive operation, so please only use this command when necessary. | None       | Admin (Root) | None                                   |
-| sm_hidestats     | Allows a player to prevent other players from viewing his extra statistics. | None       | Anyone       | None                                   |
+| sm_hidestats     | Allows a player to prevent other players from viewing his/her extra statistics. | Number     | Anyone       | 1 = hide, 0 = unhide                   |
 
