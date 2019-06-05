@@ -1028,7 +1028,7 @@ public void ShowInGamePlayerRanks(int client) {
 		return;
 	}
 	
-	char steamId[128];
+	char steamId[MAX_STEAMAUTH_LENGTH];
 	if (!GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId))) {
 		Error("ShowInGamePlayerRanks :: Could not retrieve a valid steam id for '%N'", client);
 		return;
@@ -1087,7 +1087,7 @@ public void TQ_ShowInGamePlayerRanks(Database db, DBResultSet results, const cha
 	while (results.FetchRow()) {
 		ExtractPlayerStats(results, map);
 		
-		char steamId[128];
+		char steamId[MAX_STEAMAUTH_LENGTH];
 		char lastKnownAlias[255];
 		int rankNum;
 		
@@ -1123,7 +1123,7 @@ public int TopInGameRanksMenuHandler(Menu menu, MenuAction action, int clientId,
 	/* If an option was selected, tell the client about the item. */
 	if (action == MenuAction_Select)
 	{
-		char steamId[64];
+		char steamId[MAX_STEAMAUTH_LENGTH];
 		bool found = menu.GetItem(idIndex, steamId, sizeof(steamId));
 		
 		if (found) {
@@ -1226,7 +1226,7 @@ void ShowTopPlayersRankPanel(int client, int max = DEFAULT_MAX_TOP_PLAYERS) {
 		return;
 	}
 	
-	char steamId[128];
+	char steamId[MAX_STEAMAUTH_LENGTH];
 	GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId));
 	
 	int len = strlen(steamId) * 2 + 1;
@@ -1285,8 +1285,8 @@ public void TQ_ShowTopPlayers(Database db, DBResultSet results, const char[] err
 	while (results.FetchRow()) {
 		ExtractPlayerStats(results, map);
 		
-		char steamId[128];
-		char lastKnownAlias[255];
+		char steamId[MAX_STEAMAUTH_LENGTH];
+		char lastKnownAlias[MAX_NAME_LENGTH];
 		int rankNum;
 		
 		map.GetString(STATS_STEAM_ID, steamId, sizeof(steamId));
