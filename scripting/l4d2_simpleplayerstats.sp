@@ -778,6 +778,11 @@ bool LoadConfigData() {
 	return true;
 }
 
+/**
+* Check if a record of a player exists
+*
+* @parm The steam id of the player to check. In'STEAM_*'format.
+*/
 public bool PlayerRecordExists(const char[] steamId) {
 	int count = 0;
 	
@@ -804,6 +809,9 @@ public bool PlayerRecordExists(const char[] steamId) {
 	return count > 0;
 }
 
+/**
+* Queries the database for the number of stat modifiers in the database
+*/
 public int GetStatModifierCount() {
 	int count = 0;
 	DBResultSet query = SQL_Query(g_hDatabase, "SELECT COUNT(1) FROM STATS_SKILLS");
@@ -1136,7 +1144,7 @@ public int TopInGameRanksMenuHandler(Menu menu, MenuAction action, int clientId,
 
 /**
 * Builds a comma delimited string of steam ids of each player who is currently in-game and associated with a team (survivor or infected). 
-* Spectators or players with invalid steam id are ignored. Note: The buffer should be big enough to contain 8 steam id strings (at least 256).
+* Spectators or players with invalid steam id are ignored. Note: The buffer should be big enough to contain at least 8 steam id strings (at least 256).
 */
 public int GetInGamePlayerSteamIds(char[] buffer, int size) {
 	if (size < 171) {
@@ -1144,7 +1152,7 @@ public int GetInGamePlayerSteamIds(char[] buffer, int size) {
 		return 0;
 	}
 	int count = 0;
-	char steamId[128];
+	char steamId[MAX_STEAMAUTH_LENGTH];
 	char tmp[128];
 	
 	int humanCount = GetHumanPlayerCount(false);
@@ -1304,7 +1312,7 @@ public int TopPlayerStatsMenuHandler(Menu menu, MenuAction action, int clientId,
 	/* If an option was selected, tell the client about the item. */
 	if (action == MenuAction_Select)
 	{
-		char steamId[64];
+		char steamId[MAX_STEAMAUTH_LENGTH];
 		bool found = menu.GetItem(idIndex, steamId, sizeof(steamId));
 		
 		if (found) {
@@ -1337,7 +1345,7 @@ public Action Command_ShowRank(int client, int args) {
 		return Plugin_Handled;
 	}
 	
-	char steamId[128];
+	char steamId[MAX_STEAMAUTH_LENGTH];
 	if (!GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId))) {
 		Error("Unable to retrieve a valid steam id from client %N", client);
 	}
@@ -1367,7 +1375,7 @@ public void ShowPlayerRankPanel(int client, const char[] steamId) {
 		return;
 	}
 	
-	char clientSteamId[128];
+	char clientSteamId[MAX_STEAMAUTH_LENGTH];
 	
 	if (GetClientAuthId(client, AuthId_Steam2, clientSteamId, sizeof(clientSteamId)) && StrEqual(clientSteamId, steamId)) {
 		Info("Player '%N' is viewing his own rank", client);
@@ -1403,7 +1411,7 @@ public void ShowPlayerRankPanel(int client, const char[] steamId) {
 */
 public void TQ_ShowPlayerRankPanel(Database db, DBResultSet results, const char[] error, DataPack pack) {
 	pack.Reset();
-	char selSteamId[64];
+	char selSteamId[MAX_STEAMAUTH_LENGTH];
 	pack.ReadString(selSteamId, sizeof(selSteamId));
 	int clientId = pack.ReadCell();
 	
@@ -1425,7 +1433,7 @@ public void TQ_ShowPlayerRankPanel(Database db, DBResultSet results, const char[
 			//Extract basic stats
 			ExtractPlayerStats(results, map);
 			
-			char steamId[128];
+			char steamId[MAX_STEAMAUTH_LENGTH];
 			char createDate[255];
 			char lastJoinDate[255];
 			
@@ -1510,7 +1518,7 @@ public bool HideExtrasFromPublic(const char[] steamId) {
 	SQL_BindParamString(g_hQueryHideExtras, 0, steamId, false);
 	
 	if (!SQL_Execute(g_hQueryHideExtras)) {
-		Error("Unable to execute query for HideExtrasFromPublic");
+		Error("Unable to execute query for HideExtrasFromPublic for steam id '%s'", steamId);
 		return false;
 	}
 	
@@ -1582,7 +1590,7 @@ public void ShowExtraStatsPanel(int client, const char[] steamId) {
 		return;
 	}
 	
-	char clientSteamId[128];
+	char clientSteamId[MAX_STEAMAUTH_LENGTH];
 	
 	if (GetClientAuthId(client, AuthId_Steam2, clientSteamId, sizeof(clientSteamId)) && StrEqual(clientSteamId, steamId)) {
 		Info("Player '%N' is viewing his extra stats", client);
@@ -1974,7 +1982,7 @@ public void InitializePlayer(int client, bool updateJoinDateIfExists) {
 		return;
 	}
 	
-	char steamId[255];
+	char steamId[MAX_STEAMAUTH_LENGTH];
 	if (!GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId))) {
 		ResetInitializeFlags(client);
 		Error("Could not initialize player '%N'. Invalid steam id (%s)", client, steamId);
@@ -2175,7 +2183,7 @@ public void PlayerConnectAnnounce(int client) {
 		return;
 	}
 	
-	char steamId[128];
+	char steamId[MAX_STEAMAUTH_LENGTH];
 	if (!GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId))) {
 		Error("PlayerConnectAnnounce :: Unable to retrieve steam id for client %N", client);
 		return;
@@ -2220,8 +2228,8 @@ public void TQ_PlayerConnectAnnounce(Database db, DBResultSet results, const cha
 			//Extract results to map
 			ExtractPlayerStats(results, map);
 			
-			char steamId[128];
-			char lastKnownAlias[255];
+			char steamId[MAX_STEAMAUTH_LENGTH];
+			char lastKnownAlias[MAX_NAME_LENGTH];
 			char createDate[255];
 			char lastJoinDate[255];
 			float totalPoints;
@@ -2535,7 +2543,7 @@ void UpdateStat(int client, const char[] column, int amount = 1, int victim = -1
 		return;
 	}
 	
-	char steamId[255];
+	char steamId[MAX_STEAMAUTH_LENGTH];
 	if (!GetClientAuthId(client, AuthId_Steam2, steamId, sizeof(steamId))) {
 		Error("UpdateStat :: Invalid steam id for %N = %s. Skipping stat update '%s'", client, steamId, column);
 		return;
@@ -2957,7 +2965,9 @@ public void OnBunnyHopStreak(int survivor, int streak, float maxVelocity) {
 
 /************* END: SKILL DETECTION *********************/
 
-
+/**
+* Get the current name/hostname of the server
+*/
 public void GetServerName(char[] buffer, int size) {
 	g_sServerName.GetString(buffer, size);
 }
@@ -3195,4 +3205,4 @@ public void Debug(const char[] format, any...)
 			PrintToConsole(i, debugMessage);
 	}
 	#endif
-}
+} 
